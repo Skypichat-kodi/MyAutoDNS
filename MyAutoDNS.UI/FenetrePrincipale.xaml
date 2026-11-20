@@ -226,7 +226,7 @@
                                 Content="Logs"
                                 Style="{StaticResource BoutonSecondaire}"
                                 Padding="12,7"
-                                Margin="0,0,18,0"
+                                Margin="0,0,6,0"
                                 Click="SurOuvrirJournal" />
 
                         <Button x:Name="BoutonEnregistrer"
@@ -238,7 +238,7 @@
                                 Click="SurEnregistrer" />
 
                         <Button Content="Fermer"
-                                Style="{StaticResource BoutonFantome}"
+                                Style="{StaticResource BoutonDanger}"
                                 Padding="12,7"
                                 IsCancel="True"
                                 Click="SurFermer" />
