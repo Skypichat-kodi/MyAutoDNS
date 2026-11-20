@@ -73,6 +73,10 @@ public partial class FenetrePrincipale : Window
 
         CaseDemarrerAvecWindows.IsChecked = TachesPlanifiees.Existe(TachesPlanifiees.NomTray);
 
+        ChampDelai.Text = configuration.DelaiMaximalSecondes.ToString(CultureInfo.CurrentCulture);
+        ChampRetention.Text = configuration.JoursDeRetention.ToString(CultureInfo.CurrentCulture);
+        CaseIgnorerCertificat.IsChecked = configuration.IgnorerErreurCertificat;
+
         MettreAJourResumeIntervalle();
 
         if (probleme is not null)
@@ -145,11 +149,20 @@ public partial class FenetrePrincipale : Window
             return;
         }
 
-        // On repart du fichier existant pour conserver les réglages que cette
-        // fenêtre n'expose pas encore (délai maximal, rétention des journaux).
+        if (!LireReglagesAvances(out int delai, out int retention, out bool ignorerCertificat, out string erreurAvancee))
+        {
+            AfficherStatut(erreurAvancee, erreur: true);
+            return;
+        }
+
+        // On repart du fichier existant : une clé ajoutée à la main, ou par une
+        // version future, n'est ainsi jamais perdue à l'enregistrement.
         Configuration configuration = Configuration.ChargerSansEchec(out _);
         configuration.Url = ChampUrl.Text.Trim();
         configuration.IntervalleMinutes = minutes;
+        configuration.DelaiMaximalSecondes = delai;
+        configuration.JoursDeRetention = retention;
+        configuration.IgnorerErreurCertificat = ignorerCertificat;
 
         string? invalide = configuration.Valider();
 
@@ -305,6 +318,38 @@ public partial class FenetrePrincipale : Window
         }
 
         minutes = (int)total;
+        return true;
+    }
+
+    /// <summary>
+    /// Lit les réglages de la section « Réglages avancés ».
+    /// </summary>
+    private bool LireReglagesAvances(
+        out int delai,
+        out int retention,
+        out bool ignorerCertificat,
+        out string erreur)
+    {
+        delai = 0;
+        retention = 0;
+        ignorerCertificat = CaseIgnorerCertificat.IsChecked == true;
+        erreur = string.Empty;
+
+        if (!int.TryParse(ChampDelai.Text.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out delai)
+            || delai is < 1 or > 600)
+        {
+            erreur = "Le délai maximal d'attente doit être un nombre entier compris entre 1 et 600 secondes.";
+            return false;
+        }
+
+        if (!int.TryParse(ChampRetention.Text.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out retention)
+            || retention < 0)
+        {
+            erreur = "Le nombre de jours de journaux conservés doit être un nombre entier positif ou nul "
+                   + "(0 = conservation illimitée).";
+            return false;
+        }
+
         return true;
     }
 

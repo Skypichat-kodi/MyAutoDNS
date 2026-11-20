@@ -53,6 +53,42 @@
                    Margin="22,4,0,16"
                    Text="Ajoute l'icône près de l'horloge à l'ouverture de session. Le service de mise à jour, lui, démarre de toute façon avec la machine." />
 
+        <!-- ================= Reglages avances ================= -->
+        <Expander Header="Réglages avancés"
+                  IsExpanded="False"
+                  Margin="0,0,0,16">
+            <StackPanel Margin="6,12,0,0">
+
+                <TextBlock Text="Délai maximal d'attente d'une requête (secondes)"
+                           Style="{StaticResource Etiquette}" />
+                <TextBox x:Name="ChampDelai"
+                         Width="90"
+                         HorizontalAlignment="Left"
+                         Padding="6,5"
+                         VerticalContentAlignment="Center" />
+                <TextBlock Style="{StaticResource Aide}"
+                           Text="De 1 à 600. Au-delà, la requête est abandonnée et retentée cinq minutes plus tard." />
+
+                <TextBlock Text="Conservation des journaux (jours)"
+                           Style="{StaticResource Etiquette}" />
+                <TextBox x:Name="ChampRetention"
+                         Width="90"
+                         HorizontalAlignment="Left"
+                         Padding="6,5"
+                         VerticalContentAlignment="Center" />
+                <TextBlock Style="{StaticResource Aide}"
+                           Text="0 = conservation illimitée. Sinon, les journaux plus anciens sont supprimés après chaque requête réussie." />
+
+                <CheckBox x:Name="CaseIgnorerCertificat"
+                          Content="Accepter les certificats non reconnus"
+                          FontWeight="SemiBold" />
+                <TextBlock Style="{StaticResource Aide}"
+                           Margin="22,4,0,0"
+                           Text="Équivalent de l'option -k de curl. À laisser coché si le fournisseur redirige vers un https dont le certificat n'est pas reconnu par Windows." />
+
+            </StackPanel>
+        </Expander>
+
         <!-- ================= Etat ================= -->
         <Border Background="White"
                 BorderBrush="#DDDDDD"
