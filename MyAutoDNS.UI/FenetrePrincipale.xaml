@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MyAutoDNS"
-        Width="680"
+        Width="880"
         SizeToContent="Height"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -190,58 +190,60 @@
                     BorderBrush="{StaticResource Bordure}"
                     BorderThickness="0,1,0,0"
                     CornerRadius="0,0,12,12"
-                    Padding="20,14,20,6">
+                    Padding="20,14">
 
-                <StackPanel>
-
-                    <!-- Configuration et controle du service -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                        <Button x:Name="BoutonEnregistrer"
-                                Content="Enregistrer"
-                                Style="{StaticResource BoutonAccent}"
-                                Margin="0,0,24,0"
-                                ToolTip="Écrit la configuration et met les tâches planifiées à jour, sans toucher au service en cours."
-                                Click="SurEnregistrer" />
+                <WrapPanel HorizontalAlignment="Center">
 
                         <Button x:Name="BoutonDemarrer"
-                                Content="Démarrer le service"
+                                Content="Démarrer Service"
                                 Style="{StaticResource BoutonSucces}"
-                                Margin="0,0,8,0"
+                                Padding="12,7"
+                                Margin="0,0,6,0"
                                 Click="SurDemarrerService" />
 
                         <Button x:Name="BoutonArreter"
-                                Content="Arrêter le service"
+                                Content="Arrêt Service"
                                 Style="{StaticResource BoutonDanger}"
+                                Padding="12,7"
+                                Margin="0,0,6,0"
                                 Click="SurArreterService" />
-                    </StackPanel>
 
-                    <!-- Actions ponctuelles, fermeture a droite -->
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right"
-                                Content="Fermer"
+                        <Button x:Name="BoutonMiseAJour"
+                                Content="Mise à jour"
+                                Style="{StaticResource BoutonSecondaire}"
+                                Padding="12,7"
+                                Margin="0,0,6,0"
+                                Click="SurMiseAJourImmediatee" />
+
+                        <Button x:Name="BoutonNotifications"
+                                Content="Notifications"
+                                Style="{StaticResource BoutonSecondaire}"
+                                Padding="12,7"
+                                Margin="0,0,6,0"
+                                Click="SurOuvrirNotifications" />
+
+                        <Button x:Name="BoutonJournal"
+                                Content="Logs"
+                                Style="{StaticResource BoutonSecondaire}"
+                                Padding="12,7"
+                                Margin="0,0,18,0"
+                                Click="SurOuvrirJournal" />
+
+                        <Button x:Name="BoutonEnregistrer"
+                                Content="Enregistrer"
+                                Style="{StaticResource BoutonAccent}"
+                                Padding="12,7"
+                                Margin="0,0,6,0"
+                                ToolTip="Écrit la configuration et met les tâches planifiées à jour, sans toucher au service en cours."
+                                Click="SurEnregistrer" />
+
+                        <Button Content="Fermer"
                                 Style="{StaticResource BoutonFantome}"
+                                Padding="12,7"
                                 IsCancel="True"
                                 Click="SurFermer" />
 
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BoutonMiseAJour"
-                                    Content="Mettre à jour maintenant"
-                                    Style="{StaticResource BoutonSecondaire}"
-                                    Margin="0,0,8,0"
-                                    Click="SurMiseAJourImmediatee" />
-                            <Button x:Name="BoutonJournal"
-                                    Content="Journal"
-                                    Style="{StaticResource BoutonSecondaire}"
-                                    Margin="0,0,8,0"
-                                    Click="SurOuvrirJournal" />
-                            <Button x:Name="BoutonNotifications"
-                                    Content="Notifications…"
-                                    Style="{StaticResource BoutonSecondaire}"
-                                    Click="SurOuvrirNotifications" />
-                        </StackPanel>
-                    </DockPanel>
-
-                </StackPanel>
+                    </WrapPanel>
             </Border>
 
         </Grid>
