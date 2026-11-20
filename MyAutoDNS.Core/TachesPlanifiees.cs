@@ -185,6 +185,81 @@ public static class TachesPlanifiees
             : resultat;
     }
 
+    /// <summary>
+    /// Arrête l'agent de fond.
+    ///
+    /// L'arrêt passe d'abord par le fichier d'arrêt : l'agent termine son cycle et
+    /// sort avec le code 0, ce que Windows ne considère pas comme un échec. Sans
+    /// cela, RestartOnFailure relancerait la tâche une minute plus tard, et
+    /// « Quitter » ne tiendrait pas.
+    ///
+    /// Si l'agent ne répond pas (bloqué sur une requête réseau, par exemple), la
+    /// tâche est terminée de force, puis le processus est tué.
+    /// </summary>
+    public static ResultatTache ArreterService()
+    {
+        if (ArretAgent.EstEnCours())
+        {
+            ArretAgent.Demander();
+
+            if (ArretAgent.AttendreArret(TimeSpan.FromSeconds(8)))
+            {
+                ArretAgent.Reinitialiser();
+                return new ResultatTache(true, "Service arrêté.");
+            }
+        }
+
+        // Dernier recours : terminer la tâche, puis tuer le processus récalcitrant.
+        if (Existe(NomService))
+        {
+            Executer("/End", "/TN", NomService);
+            ArretAgent.AttendreArret(TimeSpan.FromSeconds(3));
+        }
+
+        ArreterProcessusRestants();
+        ArretAgent.Reinitialiser();
+
+        return new ResultatTache(true, "Service arrêté de force : le fichier d'arrêt n'a pas été traité.");
+    }
+
+    /// <summary>
+    /// Redémarre l'agent pour qu'il relise settings.json sans attendre la fin de
+    /// son cycle en cours.
+    /// </summary>
+    public static ResultatTache RedemarrerService()
+    {
+        ArreterService();
+
+        // Le fichier d'arrêt a été supprimé : le nouvel agent ne s'arrêtera pas aussitôt.
+        return Demarrer(NomService);
+    }
+
+    /// <summary>Tue les processus d'agent encore présents.</summary>
+    private static void ArreterProcessusRestants()
+    {
+        Process[] processus = Process.GetProcessesByName(ArretAgent.NomProcessus);
+
+        foreach (Process instance in processus)
+        {
+            try
+            {
+                if (!instance.HasExited)
+                {
+                    instance.Kill();
+                    instance.WaitForExit(3000);
+                }
+            }
+            catch (Exception)
+            {
+                // Déjà terminé par la tâche planifiée : cas normal.
+            }
+            finally
+            {
+                instance.Dispose();
+            }
+        }
+    }
+
     // ------------------------------------------------------------------
     // Fabrique XML
     // ------------------------------------------------------------------

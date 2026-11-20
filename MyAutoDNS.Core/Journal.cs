@@ -14,7 +14,29 @@ public static class Journal
     /// <summary>Longueur maximale d'un message, pour qu'une page d'erreur HTML ne noie pas le fichier.</summary>
     private const int LongueurMaximale = 400;
 
-    private static readonly UTF8Encoding EncodageSansBom = new(encoderShouldEmitUTF8Identifier: false);
+    private static readonly UTF8Encoding EncodageAvecBom = new(encoderShouldEmitUTF8Identifier: true);
+
+    /// <summary>
+    /// Vide le journal du jour et le recrée.
+    ///
+    /// Appelé au démarrage de l'agent : chaque session repart sur un journal
+    /// propre, sans se mélanger avec les démarrages précédents.
+    /// </summary>
+    public static void Reinitialiser()
+    {
+        try
+        {
+            Chemins.PreparerDossiers();
+
+            // WriteAllText sur une chaîne vide crée un fichier neuf : le BOM est
+            // écrit, et les lignes suivantes s'ajoutent derrière.
+            File.WriteAllText(Chemins.JournalDuJour(), string.Empty, EncodageAvecBom);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"Remise à zéro du journal impossible : {ex.Message}");
+        }
+    }
 
     /// <summary>Ajoute une ligne horodatée au journal du jour.</summary>
     public static void Ecrire(string message)
@@ -25,7 +47,7 @@ public static class Journal
         try
         {
             Chemins.PreparerDossiers();
-            File.AppendAllText(Chemins.JournalDuJour(), ligne, EncodageSansBom);
+            File.AppendAllText(Chemins.JournalDuJour(), ligne, EncodageAvecBom);
         }
         catch (Exception ex)
         {

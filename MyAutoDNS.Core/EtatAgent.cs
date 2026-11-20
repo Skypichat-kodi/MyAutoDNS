@@ -28,6 +28,12 @@ public sealed class EtatAgent
     /// <summary>Résumé lisible du dernier résultat.</summary>
     public string? DernierResultat { get; set; }
 
+    /// <summary>Interprétation de la dernière réponse du fournisseur.</summary>
+    public EtatSynchronisation DernierEtat { get; set; } = EtatSynchronisation.Inconnu;
+
+    /// <summary>Texte brut renvoyé par le fournisseur lors de la dernière requête.</summary>
+    public string? DerniereReponse { get; set; }
+
     /// <summary>Charge l'état, ou renvoie un état vide si le fichier est absent ou illisible.</summary>
     public static EtatAgent Charger()
     {
@@ -50,18 +56,20 @@ public sealed class EtatAgent
     }
 
     /// <summary>Enregistre la date de la tentative, et celle de la réussite le cas échéant.</summary>
-    public void EnregistrerRequete(bool reussie)
+    public void EnregistrerRequete(ResultatRequete resultat)
     {
         DateTimeOffset maintenant = DateTimeOffset.UtcNow;
 
         DerniereRequeteUtc = maintenant;
 
-        if (reussie)
+        if (resultat.Reussie)
         {
             DerniereReussiteUtc = maintenant;
         }
 
-        DernierResultat = reussie ? "réussie" : "échouée";
+        DernierResultat = resultat.Reussie ? "réussie" : "échouée";
+        DernierEtat = resultat.Etat;
+        DerniereReponse = resultat.Reponse;
 
         Enregistrer();
     }

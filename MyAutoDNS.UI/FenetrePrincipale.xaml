@@ -63,6 +63,10 @@
             <StackPanel>
                 <TextBlock Text="État" FontWeight="SemiBold" Margin="0,0,0,8" />
                 <TextBlock x:Name="TexteEtatService" Text="…" />
+                <TextBlock x:Name="TexteEtatSynchronisation"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap"
+                           Margin="0,8,0,0" />
                 <TextBlock x:Name="TexteDerniereLigne"
                            Foreground="#666666"
                            FontSize="11"

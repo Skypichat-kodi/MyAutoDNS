@@ -187,10 +187,18 @@ internal sealed class ContexteTray : ApplicationContext
 
         if (_serviceActif)
         {
-            // La dernière ligne du journal donne l'état réel de la synchronisation :
-            // c'est plus utile qu'un simple « actif ».
-            string? derniere = Journal.DerniereLigne();
-            texte = derniere is null ? "MyAutoDNS — service actif" : $"MyAutoDNS — {derniere}";
+            // etat.json porte l'interprétation de la dernière réponse : plus lisible
+            // qu'une ligne de journal brute, de toute façon tronquée à 63 caractères.
+            EtatAgent etat = EtatAgent.Charger();
+
+            texte = etat.DernierEtat switch
+            {
+                EtatSynchronisation.MiseAJourEffectuee => "MyAutoDNS — adresse mise à jour",
+                EtatSynchronisation.AucunChangement => "MyAutoDNS — adresse déjà à jour",
+                EtatSynchronisation.AdresseRefusee => "MyAutoDNS — adresse refusée",
+                EtatSynchronisation.Echec => "MyAutoDNS — dernière requête en échec",
+                _ => "MyAutoDNS — service actif",
+            };
         }
         else
         {
@@ -258,16 +266,19 @@ internal sealed class ContexteTray : ApplicationContext
             return;
         }
 
-        // 1. Fermer l'interface d'abord : sinon elle pourrait relancer le service
+        // 1. L'icône disparaît immédiatement : l'utilisateur voit que le clic a été pris en compte.
+        _icone.Visible = false;
+
+        // 2. Fermer l'interface d'abord : sinon elle pourrait relancer le service
         //    dans la foulée et annuler l'arrêt demandé.
         FermerInterface();
 
-        // 2. Arrêter le service : par la tâche planifiée, puis en dernier recours
-        //    par le processus lui-même si la tâche n'existe pas ou a échoué.
-        TachesPlanifiees.Arreter(TachesPlanifiees.NomService);
-        ArreterProcessus(NomProcessusService);
+        // 3. Arrêt propre de l'agent : il sort avec le code 0, ce que Windows ne
+        //    considère pas comme un échec. Sans cela, la relance automatique de la
+        //    tâche planifiée ferait revenir le service une minute plus tard.
+        TachesPlanifiees.ArreterService();
 
-        // 3. Et, par conséquent, se fermer.
+        // 4. Et, par conséquent, se fermer.
         Fermer();
     }
 
@@ -288,31 +299,6 @@ internal sealed class ContexteTray : ApplicationContext
             catch (Exception)
             {
                 // Interface déjà fermée, ou droits insuffisants : sans gravité.
-            }
-            finally
-            {
-                instance.Dispose();
-            }
-        }
-    }
-
-    private static void ArreterProcessus(string nomProcessus)
-    {
-        Process[] processus = Process.GetProcessesByName(nomProcessus);
-
-        foreach (Process instance in processus)
-        {
-            try
-            {
-                if (!instance.HasExited)
-                {
-                    instance.Kill();
-                    instance.WaitForExit(3000);
-                }
-            }
-            catch (Exception)
-            {
-                // Processus déjà arrêté par la tâche planifiée : c'est le cas normal.
             }
             finally
             {

@@ -60,12 +60,31 @@ Le fichier est reecrit par l'interface : il ne doit contenir aucun commentaire.
 ## Journal
 
 `C:\ProgramData\MyAutoDNS\logs\myautodns_AAAA-MM-JJ.log`, un fichier par jour,
-une ligne par evenement, au format du script d'origine :
+**vide et recree a chaque demarrage de l'agent** : chaque session se lit seule, sans
+se melanger aux precedentes. Encodage UTF-8 avec BOM, pour que `type` sous cmd.exe
+et PowerShell 5.1 affichent les accents correctement.
 
 ```
-2026-11-20 14:32:11  HTTP 200 en 342 ms : Updated 1 host xxx
-2026-11-20 15:32:12  ECHEC : aucune reponse apres 30 s
+2026-11-20 22:54:41  Service demarre.
+2026-11-20 22:54:47  Adresse deja a jour - HTTP 200 en 939 ms : No IP change detected for skypichat.mooo.com with IP 90.62.247.246, skipping update
+2026-11-20 23:54:52  Mise a jour effectuee - HTTP 200 en 412 ms : Updated 1 host skypichat.mooo.com to 90.62.247.247
 ```
+
+### Etats reconnus
+
+La reponse d'afraid.org est du texte libre. Elle est qualifiee avant d'etre
+journalisee et affichee, dans l'interface comme dans l'info-bulle de l'icone :
+
+| Reponse du fournisseur | Etat |
+|---|---|
+| contient `Updated` | Mise a jour effectuee |
+| contient `No IP change`, `skipping`, `not changed` | Adresse deja a jour |
+| HTTP 401/403, `Unauthorized`, `invalid`, `denied` | Adresse de mise a jour refusee |
+| delai depasse, reseau, HTTP 5xx | Echec de la requete |
+| tout autre texte | Reponse non reconnue |
+
+L'etat et la reponse brute sont conserves dans `etat.json`, ce qui permet a
+l'interface et a l'icone de les afficher sans relire tout le journal.
 
 ## Compilation
 
@@ -92,6 +111,8 @@ Runtime doit etre present sur le poste cible.
 - [x] `MyAutoDNS.Tray` : icone de notification, clic gauche / clic droit
 - [x] `MyAutoDNS.UI` : fenetre de configuration WPF (elevee)
 - [x] `inno\MyAutoDNS.iss` et `build.bat`
-- [ ] Validation de l'import XML des taches sur un poste reel
-- [ ] Essai visuel de l'interface (exige l'acceptation de l'invite UAC)
-- [ ] Installation complete reelle (l'installeur n'a pas encore ete execute)
+- [x] Installation complete reelle et premiere synchronisation reussie
+- [x] Journal remis a zero au demarrage, UTF-8 avec BOM
+- [x] Qualification de la reponse du fournisseur DDNS
+- [ ] Validation de l'arret propre (code de retour 0 au lieu de 2147943691)
+- [ ] Validation du verrou d'instance de l'interface

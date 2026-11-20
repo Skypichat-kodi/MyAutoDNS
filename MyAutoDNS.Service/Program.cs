@@ -22,11 +22,12 @@ namespace MyAutoDNS.Service;
 internal static class Program
 {
     /// <summary>
-    /// Fréquence à laquelle l'agent vérifie l'heure, la configuration et la demande
-    /// immédiate. 15 secondes est un bon compromis : l'interface reste réactive
-    /// sans faire tourner le disque en permanence.
+    /// Fréquence à laquelle l'agent vérifie l'heure, la configuration, la demande
+    /// immédiate et la demande d'arrêt. 5 secondes : assez réactif pour que
+    /// « Quitter » et « Mettre à jour maintenant » répondent sans délai perceptible,
+    /// et assez rare pour ne pas solliciter le disque inutilement.
     /// </summary>
-    private static readonly TimeSpan TrancheAttente = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan TrancheAttente = TimeSpan.FromSeconds(5);
 
     /// <summary>Nouvelle tentative après une requête en échec.</summary>
     private static readonly TimeSpan DelaiApresEchec = TimeSpan.FromMinutes(5);
@@ -45,6 +46,10 @@ internal static class Program
         }
 
         Chemins.PreparerDossiers();
+
+        // Chaque démarrage repart sur un journal propre : on ne relit que la
+        // session en cours, sans mélange avec les précédentes.
+        Journal.Reinitialiser();
 
         using CancellationTokenSource arret = new();
 
@@ -77,6 +82,16 @@ internal static class Program
         {
             while (!arret.IsCancellationRequested)
             {
+                // ---- 0. Arrêt demandé par l'interface ou par l'icône ? ----
+                // On sort avec le code 0 : Windows ne voit pas d'échec et ne relance
+                // donc pas la tâche planifiée.
+                if (ArretAgent.DemandeEnAttente())
+                {
+                    ArretAgent.Reinitialiser();
+                    Journal.Ecrire("Arrêt demandé, sortie propre.");
+                    break;
+                }
+
                 // ---- 1. L'interface a-t-elle enregistré de nouveaux réglages ? ----
                 DateTime? signatureCourante = Configuration.DateDeModification();
 
@@ -164,7 +179,7 @@ internal static class Program
         ResultatRequete resultat = await MiseAJourDdns.ExecuterAsync(configuration, jeton);
 
         Journal.Ecrire(resultat.Message);
-        etat.EnregistrerRequete(resultat.Reussie);
+        etat.EnregistrerRequete(resultat);
 
         if (!resultat.Reussie)
         {

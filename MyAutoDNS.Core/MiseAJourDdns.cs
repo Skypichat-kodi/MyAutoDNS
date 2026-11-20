@@ -3,16 +3,25 @@ using System.Net.Http;
 
 namespace MyAutoDNS.Core;
 
-/// <summary>Résultat d'une tentative de mise à jour, prêt à être journalisé.</summary>
-public sealed record ResultatRequete(bool Reussie, string Message);
+/// <summary>
+/// Résultat d'une tentative de mise à jour, prêt à être journalisé et affiché.
+/// </summary>
+/// <param name="Reussie">Vrai si le fournisseur a répondu et accepté la requête (HTTP 2xx).</param>
+/// <param name="Etat">Interprétation de la réponse.</param>
+/// <param name="Reponse">Corps de la réponse, ramené sur une ligne et tronqué.</param>
+/// <param name="Message">Ligne complète destinée au journal.</param>
+public sealed record ResultatRequete(
+    bool Reussie,
+    EtatSynchronisation Etat,
+    string Reponse,
+    string Message);
 
 /// <summary>
 /// Envoi de la requête de mise à jour au fournisseur de nom de domaine.
 ///
 /// Reprend exactement le comportement du script d'origine :
 ///     curl.exe -k -s http://sync.afraid.org/u/xxxxx/
-/// c'est-à-dire une requête GET, sans vérification stricte du certificat, dont
-/// la réponse est recopiée dans le journal.
+/// c'est-à-dire une requête GET, sans vérification stricte du certificat.
 /// </summary>
 public static class MiseAJourDdns
 {
@@ -51,34 +60,93 @@ public static class MiseAJourDdns
         try
         {
             using HttpResponseMessage reponse = await client.GetAsync(configuration.Url.Trim(), jeton);
-            string corps = Journal.Reduire(await reponse.Content.ReadAsStringAsync(jeton));
 
+            string corps = Journal.Reduire(await reponse.Content.ReadAsStringAsync(jeton));
             chronometre.Stop();
 
-            string message = reponse.IsSuccessStatusCode
-                ? $"HTTP {(int)reponse.StatusCode} en {chronometre.ElapsedMilliseconds} ms : {corps}"
-                : $"HTTP {(int)reponse.StatusCode} {reponse.ReasonPhrase} en {chronometre.ElapsedMilliseconds} ms : {corps}";
+            int code = (int)reponse.StatusCode;
+            EtatSynchronisation etat = Interpreter(code, corps);
 
-            return new ResultatRequete(reponse.IsSuccessStatusCode, message);
+            string message = reponse.IsSuccessStatusCode
+                ? $"{etat.Libelle()} — HTTP {code} en {chronometre.ElapsedMilliseconds} ms : {corps}"
+                : $"ÉCHEC ({etat.Libelle()}) — HTTP {code} {reponse.ReasonPhrase} "
+                  + $"en {chronometre.ElapsedMilliseconds} ms : {corps}";
+
+            return new ResultatRequete(reponse.IsSuccessStatusCode, etat, corps, message);
         }
         catch (TaskCanceledException) when (!jeton.IsCancellationRequested)
         {
             // HttpClient signale ainsi le dépassement de son propre délai.
-            return new ResultatRequete(
-                false,
-                $"ÉCHEC : aucune réponse après {configuration.DelaiMaximalSecondes} s");
+            const string message = "ÉCHEC : aucune réponse du fournisseur dans le délai imparti";
+            return new ResultatRequete(false, EtatSynchronisation.Echec, string.Empty, message);
         }
         catch (OperationCanceledException)
         {
-            return new ResultatRequete(false, "ÉCHEC : requête interrompue (arrêt du service)");
+            return new ResultatRequete(
+                false,
+                EtatSynchronisation.Echec,
+                string.Empty,
+                "ÉCHEC : requête interrompue (arrêt du service)");
         }
         catch (HttpRequestException ex)
         {
-            return new ResultatRequete(false, $"ÉCHEC : {ex.Message}");
+            return new ResultatRequete(false, EtatSynchronisation.Echec, string.Empty, $"ÉCHEC : {ex.Message}");
         }
         catch (Exception ex)
         {
-            return new ResultatRequete(false, $"ÉCHEC : {ex.GetType().Name} : {ex.Message}");
+            return new ResultatRequete(
+                false,
+                EtatSynchronisation.Echec,
+                string.Empty,
+                $"ÉCHEC : {ex.GetType().Name} : {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Traduit la réponse texte du fournisseur en état compréhensible.
+    ///
+    /// L'ordre des tests compte : « No IP change detected ... skipping update » ne
+    /// contient pas « Updated », mais mieux vaut vérifier l'absence de changement
+    /// avant de chercher une mise à jour, pour ne jamais annoncer une mise à jour
+    /// qui n'a pas eu lieu.
+    /// </summary>
+    public static EtatSynchronisation Interpreter(int codeHttp, string corps)
+    {
+        if (codeHttp is 401 or 403)
+        {
+            return EtatSynchronisation.AdresseRefusee;
+        }
+
+        if (codeHttp >= 500)
+        {
+            return EtatSynchronisation.Echec;
+        }
+
+        string texte = corps ?? string.Empty;
+
+        if (ContientUnDes(texte, "No IP change", "not changed", "skipping", "no update"))
+        {
+            return EtatSynchronisation.AucunChangement;
+        }
+
+        if (ContientUnDes(texte, "Updated", "Update complete"))
+        {
+            return EtatSynchronisation.MiseAJourEffectuee;
+        }
+
+        if (ContientUnDes(texte, "ERROR", "Unauthorized", "invalid", "denied"))
+        {
+            return EtatSynchronisation.AdresseRefusee;
+        }
+
+        if (codeHttp is >= 400 and < 500)
+        {
+            return EtatSynchronisation.AdresseRefusee;
+        }
+
+        return EtatSynchronisation.Inconnu;
+    }
+
+    private static bool ContientUnDes(string texte, params string[] morceaux) =>
+        morceaux.Any(morceau => texte.Contains(morceau, StringComparison.OrdinalIgnoreCase));
 }

@@ -46,6 +46,13 @@ public static class Chemins
     public static string FichierDemandeImmediate =>
         Path.Combine(DossierDonnees, "mise-a-jour-maintenant.flag");
 
+    /// <summary>
+    /// Déposé par l'interface ou par l'icône pour demander l'arrêt de l'agent.
+    /// Il existe parce que tuer le processus (schtasks /End) est vu par Windows
+    /// comme un échec, ce qui déclenche la relance automatique de la tâche.
+    /// </summary>
+    public static string FichierArretDemande => Path.Combine(DossierDonnees, "arret.flag");
+
     /// <summary>Chemin du journal du jour : logs\myautodns_2026-11-20.log</summary>
     public static string JournalDuJour() => JournalDe(DateTime.Now);
 

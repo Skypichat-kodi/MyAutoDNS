@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Windows.Input;
 using MyAutoDNS.Core;
 
 namespace MyAutoDNS.UI;
@@ -89,11 +90,31 @@ public partial class FenetrePrincipale : Window
         TexteEtatService.Text = actif ? "● Service actif" : "● Service arrêté";
         TexteEtatService.Foreground = actif ? CouleurActive : CouleurInactive;
 
-        string? derniere = Journal.DerniereLigne();
+        EtatAgent etat = EtatAgent.Charger();
 
-        TexteDerniereLigne.Text = derniere is null
-            ? "Aucune requête enregistrée aujourd'hui."
-            : $"Journal du jour : {derniere}";
+        // L'état est stocké qualifié par l'agent : l'utilisateur voit immédiatement
+        // si son adresse a changé, et non un texte technique à décoder.
+        TexteEtatSynchronisation.Text = $"Dernière synchronisation : {etat.DernierEtat.Libelle()}";
+        TexteEtatSynchronisation.Foreground = etat.DernierEtat.EstUneAnomalie()
+            ? CouleurInactive
+            : etat.DernierEtat == EtatSynchronisation.MiseAJourEffectuee ? CouleurActive : CouleurNormale;
+
+        List<string> precisions = new();
+
+        if (etat.DerniereRequeteUtc is not null)
+        {
+            DateTime locale = etat.DerniereRequeteUtc.Value.LocalDateTime;
+            precisions.Add($"Dernière requête : {locale:dd/MM/yyyy} à {locale:HH:mm:ss}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(etat.DerniereReponse))
+        {
+            precisions.Add($"Réponse du fournisseur : {etat.DerniereReponse}");
+        }
+
+        TexteDerniereLigne.Text = precisions.Count == 0
+            ? "Aucune requête enregistrée pour l'instant."
+            : string.Join(Environment.NewLine, precisions);
     }
 
     // ------------------------------------------------------------------
@@ -101,6 +122,22 @@ public partial class FenetrePrincipale : Window
     // ------------------------------------------------------------------
 
     private void SurEnregistrer(object sender, RoutedEventArgs e)
+    {
+        // L'arrêt de l'agent prend quelques secondes : le curseur d'attente évite
+        // que la fenêtre paraisse figée pendant l'opération.
+        Mouse.OverrideCursor = Cursors.Wait;
+
+        try
+        {
+            EnregistrerEtAppliquer();
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+    }
+
+    private void EnregistrerEtAppliquer()
     {
         if (!LireIntervalle(out int minutes, out string erreur))
         {
@@ -154,9 +191,9 @@ public partial class FenetrePrincipale : Window
             TachesPlanifiees.Supprimer(TachesPlanifiees.NomTray);
             etapes.Add("Démarrage automatique de l'icône désactivé.");
         }
-
         // Redémarrage de l'agent : il relit settings.json et recalcule son échéance.
-        etapes.Add(TachesPlanifiees.Redemarrer(TachesPlanifiees.NomService).Message);
+        // L'arrêt est propre, donc la tâche planifiée ne le relance pas en double.
+        etapes.Add(TachesPlanifiees.RedemarrerService().Message);
 
         if (avecWindows)
         {
@@ -193,7 +230,7 @@ public partial class FenetrePrincipale : Window
         }
 
         AfficherStatut(
-            "Demande envoyée : la requête part dans les 15 secondes. "
+            "Demande envoyée : la requête part dans les 5 secondes. "
             + "Le résultat apparaîtra dans le journal.");
 
         RafraichirEtat();
