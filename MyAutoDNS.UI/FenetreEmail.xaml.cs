@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using MyAutoDNS.Core;
@@ -122,6 +123,33 @@ public partial class FenetreEmail : Window
     }
 
     private void SurFermer(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>
+    /// Prévient dès la saisie si le port choisi ne pourra pas fonctionner :
+    /// 465 désigne le SSL implicite, que System.Net.Mail ne sait pas négocier.
+    /// </summary>
+    private void SurPortModifie(object sender, TextChangedEventArgs e)
+    {
+        if (TexteStatut is null)
+        {
+            return;
+        }
+
+        if (int.TryParse(ChampPort.Text.Trim(), CultureInfo.CurrentCulture, out int port) && port == 465)
+        {
+            Afficher(
+                "Le port 465 (SSL implicite) n'est pas pris en charge : la connexion resterait bloquée "
+                + "une trentaine de secondes. Utilise le port 587.",
+                erreur: true);
+
+            return;
+        }
+
+        if (TexteStatut.Text.StartsWith("Le port 465", StringComparison.Ordinal))
+        {
+            Afficher(string.Empty);
+        }
+    }
 
     /// <summary>L'en-tête fait office de barre de titre.</summary>
     private void EnTete_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

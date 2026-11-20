@@ -56,6 +56,18 @@ public partial class FenetreTestEmail : Window
             return;
         }
 
+        // System.Net.Mail ne sait faire que STARTTLS : sur le port 465, le serveur
+        // attend une poignee de main TLS immediate alors que le client attend
+        // d'abord la banniere en clair. Les deux se bloquent jusqu'au delai.
+        if (_reglages.Port == 465)
+        {
+            Journaliser("ARRÊT : le port 465 utilise le SSL implicite, que System.Net.Mail ne sait pas négocier.");
+            Journaliser("Utilise le port 587 (STARTTLS) : le serveur Orange accepte les deux.");
+            Journaliser(string.Empty);
+            Journaliser("Rien n'a été envoyé. La tentative aurait échoué après une attente de 30 secondes.");
+            return;
+        }
+
         await EnvoyerLeMessageAsync();
 
         Terminer();
@@ -89,6 +101,7 @@ public partial class FenetreTestEmail : Window
     {
         Journaliser("Connexion, authentification et envoi…");
         Journaliser("(System.Net.Mail ne permet pas de détailler ces trois étapes)");
+        Journaliser("Le serveur a jusqu'à 30 secondes pour répondre.");
         Journaliser(string.Empty);
 
         ResultatNotification resultat = await NotificationEmail.EnvoyerAsync(

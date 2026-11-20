@@ -87,7 +87,7 @@
 
                     <StackPanel Grid.Column="1">
                         <TextBlock Text="Port" Style="{StaticResource Libelle}" />
-                        <TextBox x:Name="ChampPort" Width="90" VerticalContentAlignment="Center" />
+                        <TextBox x:Name="ChampPort" Width="90" VerticalContentAlignment="Center" TextChanged="SurPortModifie" />
                     </StackPanel>
                 </Grid>
 
