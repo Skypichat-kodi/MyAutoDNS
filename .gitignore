@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+#  MyAutoDNS - fichiers exclus du versionnement
+# ---------------------------------------------------------------------------
+
+# Resultats de compilation (a la racine de chaque projet)
+[Bb]in/
+[Oo]bj/
+
+# Dossiers produits par les scripts de build
+/publish/
+
+# Installeurs produits par build.bat
+/Installers/
+
+# Fichiers generes par les outils .NET et Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Journaux et fichiers temporaires
+*.log
+*.tmp
+*.bak
+
+# Etat local du programme : ne doit jamais partir dans le depot.
+# (fichiers ecrits dans ProgramData, presents ici uniquement en developpement)
+etat.json
+settings.json
+*.flag
+
+# Fichiers systeme Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Paquets et restaurations locales
+packages/
+*.nupkg
+
+# Reglages propres a un poste : ne doivent jamais partir dans le depot.
+appsettings.*.local.json
+*.secret
