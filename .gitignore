@@ -29,6 +29,7 @@
 # (fichiers ecrits dans ProgramData, presents ici uniquement en developpement)
 etat.json
 settings.json
+email.json
 *.flag
 
 # Fichiers systeme Windows

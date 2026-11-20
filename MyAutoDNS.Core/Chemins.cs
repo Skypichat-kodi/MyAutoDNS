@@ -30,6 +30,13 @@ public static class Chemins
     public static string FichierConfiguration => Path.Combine(DossierDonnees, "settings.json");
 
     /// <summary>
+    /// Réglages d'envoi des notifications, séparés de settings.json : ils
+    /// contiennent un mot de passe chiffré, qui n'a rien à faire dans le fichier
+    /// des réglages courants.
+    /// </summary>
+    public static string FichierEmail => Path.Combine(DossierDonnees, "email.json");
+
+    /// <summary>
     /// Mémoire du Service : date de la dernière requête et de la dernière réussite.
     /// Conservée sur disque pour qu'un redémarrage de l'agent ne déclenche pas
     /// une requête supplémentaire.

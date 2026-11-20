@@ -227,6 +227,15 @@ internal static class Program
         Journal.Ecrire(resultat.Message);
         etat.EnregistrerRequete(resultat);
 
+        // Courriel uniquement lorsqu'une nouvelle adresse a réellement été
+        // enregistrée chez le fournisseur. Le cas « adresse déjà à jour » — de
+        // loin le plus fréquent — n'envoie rien : sinon la boîte recevrait un
+        // message à chaque cycle, pour ne rien dire.
+        if (resultat.Etat == EtatSynchronisation.MiseAJourEffectuee)
+        {
+            await NotifierMiseAJourAsync(resultat, jeton);
+        }
+
         if (!resultat.Reussie)
         {
             // Une coupure réseau ne doit pas faire attendre une heure entière.
@@ -235,6 +244,29 @@ internal static class Program
 
         Journal.PurgerAnciens(configuration.JoursDeRetention);
         return (DateTimeOffset.UtcNow + configuration.Intervalle, null);
+    }
+
+    /// <summary>
+    /// Prévient par courriel qu'une nouvelle adresse vient d'être enregistrée.
+    /// Un échec d'envoi est journalisé mais ne remet jamais en cause la
+    /// synchronisation, qui a déjà réussi.
+    /// </summary>
+    private static async Task NotifierMiseAJourAsync(ResultatRequete resultat, CancellationToken jeton)
+    {
+        ConfigurationEmail configuration = ConfigurationEmail.Charger();
+
+        if (!configuration.Actif)
+        {
+            return;
+        }
+
+        ResultatNotification notification = await NotificationEmail.EnvoyerAsync(
+            configuration,
+            NotificationEmail.ConstruireSujet(),
+            NotificationEmail.ConstruireCorps(resultat.Reponse, Chemins.JournalDuJour(), DateTime.Now),
+            jeton);
+
+        Journal.Ecrire(notification.Message);
     }
 
     /// <summary>

@@ -1,0 +1,126 @@
+<Window x:Class="MyAutoDNS.UI.FenetreEmail"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Notifications"
+        Width="580"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="Transparent"
+        Foreground="{StaticResource Texte}"
+        FontFamily="Segoe UI"
+        FontSize="13"
+        UseLayoutRounding="True">
+
+    <Border Margin="14"
+            Background="{StaticResource Fond}"
+            BorderBrush="{StaticResource Bordure}"
+            BorderThickness="1"
+            CornerRadius="12">
+
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.5" Color="Black" />
+        </Border.Effect>
+
+        <StackPanel>
+
+            <!-- En-tete -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Bordure}"
+                    BorderThickness="0,0,0,1"
+                    CornerRadius="12,12,0,0"
+                    MouseLeftButtonDown="EnTete_MouseLeftButtonDown">
+
+                <Grid Margin="20,12,10,12">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Notifications par courriel" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Prévient lorsqu'une nouvelle adresse est enregistrée"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TexteSecondaire}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <Button Content="✕"
+                            Style="{StaticResource BoutonFantome}"
+                            Width="32" Height="28" Padding="0" FontSize="13"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            ToolTip="Fermer"
+                            Click="SurFermer" />
+                </Grid>
+            </Border>
+
+            <!-- Contenu -->
+            <StackPanel Margin="20,18,20,20">
+
+                <CheckBox x:Name="CaseActif"
+                          Content="Envoyer un courriel lors d'une mise à jour"
+                          FontWeight="SemiBold" />
+                <TextBlock Style="{StaticResource Aide}"
+                           Margin="24,6,0,16"
+                           Text="Aucun message n'est envoyé lorsque l'adresse est déjà à jour : seul un vrai renouvellement déclenche l'alerte." />
+
+                <TextBlock Text="Adresse d'expédition" Style="{StaticResource Libelle}" />
+                <TextBox x:Name="ChampExpediteur" VerticalContentAlignment="Center" />
+
+                <TextBlock Text="Mot de passe SMTP" Style="{StaticResource Libelle}" Margin="0,12,0,5" />
+                <PasswordBox x:Name="ChampMotDePasse" VerticalContentAlignment="Center" />
+                <TextBlock x:Name="TexteMotDePasse"
+                           Style="{StaticResource Aide}"
+                           Text="Chiffré sur ce poste. Un autre ordinateur ne pourra pas le relire." />
+
+                <TextBlock Text="Adresse du destinataire" Style="{StaticResource Libelle}" Margin="0,12,0,5" />
+                <TextBox x:Name="ChampDestinataire" VerticalContentAlignment="Center" />
+
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock Text="Serveur SMTP" Style="{StaticResource Libelle}" />
+                        <TextBox x:Name="ChampServeur" VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Port" Style="{StaticResource Libelle}" />
+                        <TextBox x:Name="ChampPort" Width="90" VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <CheckBox x:Name="CaseChiffree"
+                          Content="Connexion chiffrée (STARTTLS)"
+                          Margin="0,16,0,0" />
+                <TextBlock Style="{StaticResource Aide}"
+                           Margin="24,6,0,0"
+                           Text="Port 587 recommandé. Le port 465 (SSL implicite) n'est pas pris en charge : ne décoche cette case que pour un serveur local sans chiffrement, sur le port 25." />
+
+                <WrapPanel Margin="0,18,0,0">
+                    <Button Content="Enregistrer"
+                            Style="{StaticResource BoutonAccent}"
+                            Margin="0,0,8,8"
+                            Click="SurEnregistrer" />
+                    <Button Content="Tester l'envoi"
+                            Style="{StaticResource BoutonSecondaire}"
+                            Margin="0,0,8,8"
+                            Click="SurTester" />
+                    <Button Content="Fermer"
+                            Style="{StaticResource BoutonSecondaire}"
+                            Margin="0,0,0,8"
+                            IsCancel="True"
+                            Click="SurFermer" />
+                </WrapPanel>
+
+                <TextBlock x:Name="TexteStatut"
+                           Margin="0,8,0,0"
+                           TextWrapping="Wrap"
+                           LineHeight="17"
+                           FontSize="12" />
+
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

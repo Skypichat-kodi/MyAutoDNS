@@ -264,6 +264,15 @@ public partial class FenetrePrincipale : Window
 
     private void SurFermer(object sender, RoutedEventArgs e) => Close();
 
+    /// <summary>
+    /// Ouvre la configuration des notifications par courriel.
+    /// </summary>
+    private void SurOuvrirNotifications(object sender, RoutedEventArgs e)
+    {
+        FenetreEmail fenetre = new() { Owner = this };
+        fenetre.ShowDialog();
+    }
+
     private void SurReduire(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     /// <summary>

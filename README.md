@@ -57,6 +57,32 @@ creees par import de XML (`ExecutionTimeLimit` = `PT0S`).
 
 Le fichier est reecrit par l'interface : il ne doit contenir aucun commentaire.
 
+### Notifications par courriel
+
+Un courriel peut partir lorsqu'une nouvelle adresse est **reellement enregistree**
+chez le fournisseur. Le cas « adresse deja a jour », de loin le plus frequent,
+n'envoie rien : sinon la boite recevrait un message a chaque cycle, pour ne rien dire.
+
+Reglages dans `C:\ProgramData\MyAutoDNS\email.json`, saisis depuis le bouton
+« Notifications... » de l'interface :
+
+| Cle | Sens | Defaut |
+|---|---|---|
+| `Actif` | envoi des notifications | `false` |
+| `Expediteur` | adresse d'expedition, sert aussi d'identifiant SMTP | vide |
+| `Destinataire` | adresse qui recoit l'alerte | vide |
+| `Serveur` | nom d'hote du serveur SMTP | vide |
+| `Port` | port du serveur | `587` |
+| `ConnexionChiffree` | negocier STARTTLS | `true` |
+| `MotDePasseChiffre` | mot de passe chiffre DPAPI, jamais en clair | vide |
+
+Le mot de passe est chiffre avec DPAPI en portee **machine** : le service (SYSTEM)
+et l'interface (administrateur) doivent tous deux pouvoir le relire, or ce sont
+deux comptes distincts. Un fichier recopie sur un autre poste devient inutilisable.
+
+`System.Net.Mail` ne gere que STARTTLS : le port 465 (SSL implicite) n'est pas
+pris en charge, il faut utiliser 587, ou 25 pour un serveur local sans chiffrement.
+
 ## Journal
 
 `C:\ProgramData\MyAutoDNS\logs\myautodns_AAAA-MM-JJ.log`, un fichier par jour,
@@ -117,3 +143,4 @@ Runtime doit etre present sur le poste cible.
 - [x] Arret propre valide : code de retour 0, aucune relance automatique
 - [x] Verrou d'instance de l'interface valide visuellement
 - [ ] Verification au prochain demarrage de Windows (reprise automatique)
+- [x] Notifications par courriel sur mise a jour reelle (SMTP, mot de passe chiffre)
