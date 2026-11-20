@@ -76,6 +76,10 @@ build.bat --auto     REM sans pause ni ouverture de dossier
 
 Resultat : `Installers\MyAutoDNS-<version>.exe`.
 
+Au premier « Enregistrer et appliquer » dans l'interface, les deux taches
+planifiees sont creees. L'installeur ne les cree pas lui-meme : seule
+l'interface connait la configuration a inscrire dans le XML.
+
 Prerequis : SDK .NET 8 (`global.json` fige la version 8.0.428) et Inno Setup 6.
 Les executables sont publies en `--self-contained false` : le .NET 8 Desktop
 Runtime doit etre present sur le poste cible.
@@ -87,6 +91,7 @@ Runtime doit etre present sur le poste cible.
 - [x] Creation des taches planifiees (XML, duree illimitee, relance sur echec)
 - [x] `MyAutoDNS.Tray` : icone de notification, clic gauche / clic droit
 - [x] `MyAutoDNS.UI` : fenetre de configuration WPF (elevee)
-- [ ] `inno\MyAutoDNS.iss` et `build.bat`
+- [x] `inno\MyAutoDNS.iss` et `build.bat`
 - [ ] Validation de l'import XML des taches sur un poste reel
 - [ ] Essai visuel de l'interface (exige l'acceptation de l'invite UAC)
+- [ ] Installation complete reelle (l'installeur n'a pas encore ete execute)
