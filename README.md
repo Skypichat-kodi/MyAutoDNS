@@ -86,6 +86,7 @@ Runtime doit etre present sur le poste cible.
 - [x] `MyAutoDNS.Service` : boucle de l'agent, relecture de configuration
 - [x] Creation des taches planifiees (XML, duree illimitee, relance sur echec)
 - [x] `MyAutoDNS.Tray` : icone de notification, clic gauche / clic droit
-- [ ] `MyAutoDNS.UI` : fenetre de configuration WPF
+- [x] `MyAutoDNS.UI` : fenetre de configuration WPF (elevee)
 - [ ] `inno\MyAutoDNS.iss` et `build.bat`
 - [ ] Validation de l'import XML des taches sur un poste reel
+- [ ] Essai visuel de l'interface (exige l'acceptation de l'invite UAC)

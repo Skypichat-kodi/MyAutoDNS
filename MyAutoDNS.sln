@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAutoDNS.Service", "MyAuto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAutoDNS.Tray", "MyAutoDNS.Tray\MyAutoDNS.Tray.csproj", "{887B1CEC-1630-493E-A994-8AD77CDE96ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAutoDNS.UI", "MyAutoDNS.UI\MyAutoDNS.UI.csproj", "{E60457EF-91F5-4C0B-9187-256633DA4EA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{887B1CEC-1630-493E-A994-8AD77CDE96ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{887B1CEC-1630-493E-A994-8AD77CDE96ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{887B1CEC-1630-493E-A994-8AD77CDE96ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E60457EF-91F5-4C0B-9187-256633DA4EA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E60457EF-91F5-4C0B-9187-256633DA4EA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E60457EF-91F5-4C0B-9187-256633DA4EA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E60457EF-91F5-4C0B-9187-256633DA4EA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
