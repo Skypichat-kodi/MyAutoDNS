@@ -1,144 +1,206 @@
 <Window x:Class="MyAutoDNS.UI.FenetrePrincipale"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MyAutoDNS — Configuration"
-        Width="640"
+        Title="MyAutoDNS"
+        Width="680"
         SizeToContent="Height"
-        ResizeMode="CanMinimize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        Foreground="{StaticResource Texte}"
         FontFamily="Segoe UI"
         FontSize="13"
-        Background="#F7F7F9">
+        UseLayoutRounding="True">
 
-    <StackPanel Margin="22">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleenVersVisibilite" />
+    </Window.Resources>
 
-        <!-- ================= En-tete ================= -->
-        <TextBlock Text="MyAutoDNS" FontSize="21" FontWeight="SemiBold" />
-        <TextBlock Text="Mise à jour automatique du nom de domaine"
-                   Foreground="#666666" Margin="0,2,0,18" />
+    <!--
+      Fenetre sans bordure, comme le client Windows MelTime.
 
-        <!-- ================= Adresse ================= -->
-        <TextBlock Text="Adresse de mise à jour" Style="{StaticResource Etiquette}" />
-        <TextBox x:Name="ChampUrl"
-                 Padding="6,5"
-                 VerticalContentAlignment="Center" />
-        <TextBlock Style="{StaticResource Aide}"
-                   Text="Adresse complète fournie par le fournisseur DDNS, menu « Direct URL ». Elle contient un jeton personnel : ne la diffuse pas." />
+      La transparence (AllowsTransparency) est employee ici parce que la fenetre
+      n'a pas besoin d'etre redimensionnable : elle s'ajuste a son contenu. On y
+      gagne les coins arrondis et l'ombre portee. Le panneau se deplace au glisser,
+      la barre de titre etant la notre.
+    -->
+    <Border Margin="14"
+            Background="{StaticResource Fond}"
+            BorderBrush="{StaticResource Bordure}"
+            BorderThickness="1"
+            CornerRadius="12">
 
-        <!-- ================= Frequence ================= -->
-        <TextBlock Text="Fréquence des mises à jour" Style="{StaticResource Etiquette}" />
-        <StackPanel Orientation="Horizontal">
-            <TextBox x:Name="ChampIntervalle"
-                     Width="90"
-                     Padding="6,5"
-                     VerticalContentAlignment="Center"
-                     TextChanged="SurIntervalleModifie" />
-            <ComboBox x:Name="ChoixUnite"
-                      Width="130"
-                      Margin="8,0,0,0"
-                      VerticalContentAlignment="Center"
-                      SelectedIndex="0"
-                      SelectionChanged="SurUniteModifiee">
-                <ComboBoxItem Content="minutes" />
-                <ComboBoxItem Content="heures" />
-            </ComboBox>
-        </StackPanel>
-        <TextBlock x:Name="TexteResumeIntervalle" Style="{StaticResource Aide}" />
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.5" Color="Black" />
+        </Border.Effect>
 
-        <!-- ================= Demarrage ================= -->
-        <CheckBox x:Name="CaseDemarrerAvecWindows"
-                  Content="Démarrer avec Windows"
-                  FontWeight="SemiBold" />
-        <TextBlock Style="{StaticResource Aide}"
-                   Margin="22,4,0,16"
-                   Text="Ajoute l'icône près de l'horloge à l'ouverture de session. Le service de mise à jour, lui, démarre de toute façon avec la machine." />
+        <StackPanel>
 
-        <!-- ================= Reglages avances ================= -->
-        <Expander Header="Réglages avancés"
-                  IsExpanded="False"
-                  Margin="0,0,0,16">
-            <StackPanel Margin="6,12,0,0">
+            <!-- ================= En-tete ================= -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Bordure}"
+                    BorderThickness="0,0,0,1"
+                    CornerRadius="12,12,0,0"
+                    MouseLeftButtonDown="EnTete_MouseLeftButtonDown">
 
-                <TextBlock Text="Délai maximal d'attente d'une requête (secondes)"
-                           Style="{StaticResource Etiquette}" />
-                <TextBox x:Name="ChampDelai"
-                         Width="90"
-                         HorizontalAlignment="Left"
-                         Padding="6,5"
-                         VerticalContentAlignment="Center" />
+                <Grid Margin="20,12,10,12">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="MyAutoDNS" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Mise à jour automatique du nom de domaine"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TexteSecondaire}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                        <Button Content="—"
+                                Style="{StaticResource BoutonFantome}"
+                                Width="32" Height="28" Padding="0" FontSize="13"
+                                ToolTip="Réduire"
+                                Click="SurReduire" />
+                        <Button Content="✕"
+                                Style="{StaticResource BoutonFantome}"
+                                Width="32" Height="28" Padding="0" FontSize="13"
+                                ToolTip="Fermer"
+                                Click="SurFermer" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ================= Contenu ================= -->
+            <StackPanel Margin="20,18,20,20">
+
+                <!-- Adresse -->
+                <TextBlock Text="Adresse de mise à jour" Style="{StaticResource Libelle}" />
+                <TextBox x:Name="ChampUrl" VerticalContentAlignment="Center" />
                 <TextBlock Style="{StaticResource Aide}"
-                           Text="De 1 à 600. Au-delà, la requête est abandonnée et retentée cinq minutes plus tard." />
+                           Text="Adresse complète fournie par le fournisseur DDNS, menu « Direct URL ». Elle contient un jeton personnel : ne la diffuse pas." />
 
-                <TextBlock Text="Conservation des journaux (jours)"
-                           Style="{StaticResource Etiquette}" />
-                <TextBox x:Name="ChampRetention"
-                         Width="90"
-                         HorizontalAlignment="Left"
-                         Padding="6,5"
-                         VerticalContentAlignment="Center" />
-                <TextBlock Style="{StaticResource Aide}"
-                           Text="0 = conservation illimitée. Sinon, les journaux plus anciens sont supprimés après chaque requête réussie." />
+                <!-- Frequence -->
+                <TextBlock Text="Fréquence des mises à jour" Style="{StaticResource Libelle}" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="ChampIntervalle"
+                             Width="90"
+                             VerticalContentAlignment="Center"
+                             TextChanged="SurIntervalleModifie" />
+                    <ComboBox x:Name="ChoixUnite"
+                              Width="140"
+                              Margin="8,0,0,0"
+                              VerticalAlignment="Center"
+                              SelectedIndex="0"
+                              SelectionChanged="SurUniteModifiee">
+                        <ComboBoxItem Content="minutes" />
+                        <ComboBoxItem Content="heures" />
+                    </ComboBox>
+                </StackPanel>
+                <TextBlock x:Name="TexteResumeIntervalle" Style="{StaticResource Aide}" />
 
-                <CheckBox x:Name="CaseIgnorerCertificat"
-                          Content="Accepter les certificats non reconnus"
-                          FontWeight="SemiBold" />
+                <!-- Demarrage -->
+                <CheckBox x:Name="CaseDemarrerAvecWindows" Content="Démarrer avec Windows" Margin="0,0,0,0" />
                 <TextBlock Style="{StaticResource Aide}"
-                           Margin="22,4,0,0"
-                           Text="Équivalent de l'option -k de curl. À laisser coché si le fournisseur redirige vers un https dont le certificat n'est pas reconnu par Windows." />
+                           Margin="24,6,0,16"
+                           Text="Ajoute l'icône près de l'horloge à l'ouverture de session. Le service de mise à jour, lui, démarre de toute façon avec la machine." />
+
+                <!-- Reglages avances -->
+                <ToggleButton x:Name="BoutonAvances"
+                              Style="{StaticResource BoutonDepliable}"
+                              Content="Réglages avancés"
+                              HorizontalAlignment="Left"
+                              Margin="0,0,0,0" />
+
+                <Border x:Name="ZoneAvances"
+                        Visibility="{Binding IsChecked, ElementName=BoutonAvances, Converter={StaticResource BooleenVersVisibilite}}"
+                        Margin="0,14,0,0">
+
+                    <StackPanel>
+
+                        <TextBlock Text="Délai maximal d'attente d'une requête (secondes)"
+                                   Style="{StaticResource Libelle}" />
+                        <TextBox x:Name="ChampDelai"
+                                 Width="90"
+                                 HorizontalAlignment="Left"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Style="{StaticResource Aide}"
+                                   Text="De 1 à 600. Au-delà, la requête est abandonnée et retentée cinq minutes plus tard." />
+
+                        <TextBlock Text="Conservation des journaux (jours)"
+                                   Style="{StaticResource Libelle}" />
+                        <TextBox x:Name="ChampRetention"
+                                 Width="90"
+                                 HorizontalAlignment="Left"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Style="{StaticResource Aide}"
+                                   Text="0 = conservation illimitée. Sinon, les journaux plus anciens sont supprimés après chaque requête réussie." />
+
+                        <CheckBox x:Name="CaseIgnorerCertificat"
+                                  Content="Accepter les certificats non reconnus" />
+                        <TextBlock Style="{StaticResource Aide}"
+                                   Margin="24,6,0,0"
+                                   Text="Équivalent de l'option -k de curl. À laisser coché si le fournisseur redirige vers un https dont le certificat n'est pas reconnu par Windows." />
+
+                    </StackPanel>
+                </Border>
+
+                <!-- Etat -->
+                <Border Background="{StaticResource Surface}"
+                        BorderBrush="{StaticResource Bordure}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16,14"
+                        Margin="0,18,0,18">
+
+                    <StackPanel>
+                        <TextBlock Text="État" Style="{StaticResource TitreSection}" />
+                        <TextBlock x:Name="TexteEtatService" Text="…" FontWeight="SemiBold" />
+                        <TextBlock x:Name="TexteEtatSynchronisation"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0" />
+                        <TextBlock x:Name="TexteDerniereLigne"
+                                   Foreground="{StaticResource TexteSecondaire}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   LineHeight="16"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Actions -->
+                <WrapPanel>
+                    <Button x:Name="BoutonEnregistrer"
+                            Content="Enregistrer et appliquer"
+                            Style="{StaticResource BoutonAccent}"
+                            Margin="0,0,8,8"
+                            Click="SurEnregistrer" />
+                    <Button x:Name="BoutonMiseAJour"
+                            Content="Mettre à jour maintenant"
+                            Style="{StaticResource BoutonSecondaire}"
+                            Margin="0,0,8,8"
+                            Click="SurMiseAJourImmediatee" />
+                    <Button x:Name="BoutonJournal"
+                            Content="Ouvrir le journal"
+                            Style="{StaticResource BoutonSecondaire}"
+                            Margin="0,0,8,8"
+                            Click="SurOuvrirJournal" />
+                    <Button Content="Fermer"
+                            Style="{StaticResource BoutonSecondaire}"
+                            Margin="0,0,0,8"
+                            IsCancel="True"
+                            Click="SurFermer" />
+                </WrapPanel>
+
+                <!-- Message -->
+                <TextBlock x:Name="TexteStatut"
+                           Margin="0,8,0,0"
+                           TextWrapping="Wrap"
+                           LineHeight="17"
+                           FontSize="12" />
 
             </StackPanel>
-        </Expander>
-
-        <!-- ================= Etat ================= -->
-        <Border Background="White"
-                BorderBrush="#DDDDDD"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="14"
-                Margin="0,0,0,18">
-            <StackPanel>
-                <TextBlock Text="État" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <TextBlock x:Name="TexteEtatService" Text="…" />
-                <TextBlock x:Name="TexteEtatSynchronisation"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"
-                           Margin="0,8,0,0" />
-                <TextBlock x:Name="TexteDerniereLigne"
-                           Foreground="#666666"
-                           FontSize="11"
-                           TextWrapping="Wrap"
-                           Margin="0,6,0,0" />
-            </StackPanel>
-        </Border>
-
-        <!-- ================= Actions ================= -->
-        <StackPanel Orientation="Horizontal">
-            <Button x:Name="BoutonEnregistrer"
-                    Content="Enregistrer et appliquer"
-                    Style="{StaticResource Bouton}"
-                    Click="SurEnregistrer" />
-            <Button x:Name="BoutonMiseAJour"
-                    Content="Mettre à jour maintenant"
-                    Style="{StaticResource Bouton}"
-                    Margin="8,0,0,0"
-                    Click="SurMiseAJourImmediatee" />
-            <Button x:Name="BoutonJournal"
-                    Content="Ouvrir le journal"
-                    Style="{StaticResource Bouton}"
-                    Margin="8,0,0,0"
-                    Click="SurOuvrirJournal" />
-            <Button Content="Fermer"
-                    Style="{StaticResource Bouton}"
-                    Margin="8,0,0,0"
-                    IsCancel="True"
-                    Click="SurFermer" />
         </StackPanel>
-
-        <!-- ================= Message ================= -->
-        <TextBlock x:Name="TexteStatut"
-                   Margin="0,14,0,0"
-                   TextWrapping="Wrap"
-                   FontSize="12" />
-
-    </StackPanel>
+    </Border>
 </Window>

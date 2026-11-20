@@ -22,10 +22,6 @@ public partial class FenetrePrincipale : Window
 {
     private const string NomProcessusService = "MyAutoDNS.Service";
 
-    private static readonly Brush CouleurActive = new SolidColorBrush(Color.FromRgb(46, 160, 67));
-    private static readonly Brush CouleurInactive = new SolidColorBrush(Color.FromRgb(217, 48, 37));
-    private static readonly Brush CouleurNormale = new SolidColorBrush(Color.FromRgb(51, 51, 51));
-
     /// <summary>Rafraîchissement de l'état affiché (service, journal).</summary>
     private readonly DispatcherTimer _rafraichissement = new()
     {
@@ -92,7 +88,7 @@ public partial class FenetrePrincipale : Window
         bool actif = ServiceEnCours();
 
         TexteEtatService.Text = actif ? "● Service actif" : "● Service arrêté";
-        TexteEtatService.Foreground = actif ? CouleurActive : CouleurInactive;
+        TexteEtatService.Foreground = actif ? Couleur("Succes") : Couleur("Erreur");
 
         EtatAgent etat = EtatAgent.Charger();
 
@@ -100,8 +96,8 @@ public partial class FenetrePrincipale : Window
         // si son adresse a changé, et non un texte technique à décoder.
         TexteEtatSynchronisation.Text = $"Dernière synchronisation : {etat.DernierEtat.Libelle()}";
         TexteEtatSynchronisation.Foreground = etat.DernierEtat.EstUneAnomalie()
-            ? CouleurInactive
-            : etat.DernierEtat == EtatSynchronisation.MiseAJourEffectuee ? CouleurActive : CouleurNormale;
+            ? Couleur("Erreur")
+            : etat.DernierEtat == EtatSynchronisation.MiseAJourEffectuee ? Couleur("Succes") : Couleur("Texte");
 
         List<string> precisions = new();
 
@@ -268,6 +264,30 @@ public partial class FenetrePrincipale : Window
 
     private void SurFermer(object sender, RoutedEventArgs e) => Close();
 
+    private void SurReduire(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    /// <summary>
+    /// Déplace la fenêtre : l'en-tête fait office de barre de titre.
+    /// </summary>
+    private void EnTete_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        try
+        {
+            // DragMove exige que le bouton soit encore enfoncé : un double-clic
+            // rapide peut le relâcher entre-temps, d'où le garde-fou.
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // Sans conséquence : la fenêtre reste simplement en place.
+        }
+    }
+
     // ------------------------------------------------------------------
     // Saisie de la fréquence
     // ------------------------------------------------------------------
@@ -400,9 +420,12 @@ public partial class FenetrePrincipale : Window
         }
     }
 
+    /// <summary>Récupère une couleur de la palette définie dans App.xaml.</summary>
+    private Brush Couleur(string cle) => (Brush)FindResource(cle);
+
     private void AfficherStatut(string message, bool erreur = false)
     {
         TexteStatut.Text = message;
-        TexteStatut.Foreground = erreur ? CouleurInactive : CouleurNormale;
+        TexteStatut.Foreground = erreur ? Couleur("Erreur") : Couleur("TexteSecondaire");
     }
 }
