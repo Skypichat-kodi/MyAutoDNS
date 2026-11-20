@@ -20,6 +20,8 @@
         <Color x:Key="CouleurAccentSurvol">#FF1B8AE0</Color>
         <Color x:Key="CouleurAccentPresse">#FF0067B8</Color>
         <Color x:Key="CouleurSucces">#FF3FB950</Color>
+        <Color x:Key="CouleurSuccesSurvol">#FF4ECD60</Color>
+        <Color x:Key="CouleurSuccesPresse">#FF35A045</Color>
         <Color x:Key="CouleurErreur">#FFFF5B5B</Color>
         <Color x:Key="CouleurErreurSurvol">#FFFF7A7A</Color>
         <Color x:Key="CouleurErreurPresse">#FFE04545</Color>
@@ -35,6 +37,8 @@
         <SolidColorBrush x:Key="AccentSurvol" Color="{StaticResource CouleurAccentSurvol}" />
         <SolidColorBrush x:Key="AccentPresse" Color="{StaticResource CouleurAccentPresse}" />
         <SolidColorBrush x:Key="Succes" Color="{StaticResource CouleurSucces}" />
+        <SolidColorBrush x:Key="SuccesSurvol" Color="{StaticResource CouleurSuccesSurvol}" />
+        <SolidColorBrush x:Key="SuccesPresse" Color="{StaticResource CouleurSuccesPresse}" />
         <SolidColorBrush x:Key="Erreur" Color="{StaticResource CouleurErreur}" />
         <SolidColorBrush x:Key="ErreurSurvol" Color="{StaticResource CouleurErreurSurvol}" />
         <SolidColorBrush x:Key="ErreurPresse" Color="{StaticResource CouleurErreurPresse}" />
@@ -275,6 +279,84 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Cadre" Property="Background" Value="{StaticResource AccentPresse}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource Surface}" />
+                                <Setter TargetName="Cadre" Property="BorderBrush" Value="{StaticResource Bordure}" />
+                                <Setter Property="Foreground" Value="{StaticResource TexteSecondaire}" />
+                                <Setter Property="FontWeight" Value="Normal" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Bouton d'action positive : vert, pour demarrer le service -->
+        <Style x:Key="BoutonSucces" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource Succes}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Succes}" />
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Cadre"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource SuccesSurvol}" />
+                                <Setter TargetName="Cadre" Property="BorderBrush" Value="{StaticResource SuccesSurvol}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource SuccesPresse}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource Surface}" />
+                                <Setter TargetName="Cadre" Property="BorderBrush" Value="{StaticResource Bordure}" />
+                                <Setter Property="Foreground" Value="{StaticResource TexteSecondaire}" />
+                                <Setter Property="FontWeight" Value="Normal" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Bouton d'action destructive : rouge, pour arreter le service -->
+        <Style x:Key="BoutonDanger" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource Erreur}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Erreur}" />
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Cadre"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource ErreurSurvol}" />
+                                <Setter TargetName="Cadre" Property="BorderBrush" Value="{StaticResource ErreurSurvol}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Cadre" Property="Background" Value="{StaticResource ErreurPresse}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Cadre" Property="Background" Value="{StaticResource Surface}" />

@@ -115,6 +115,10 @@ public partial class FenetrePrincipale : Window
         TexteDerniereLigne.Text = precisions.Count == 0
             ? "Aucune requête enregistrée pour l'instant."
             : string.Join(Environment.NewLine, precisions);
+
+        // Les boutons de service ne doivent jamais proposer une action sans objet.
+        BoutonDemarrer.IsEnabled = !actif;
+        BoutonArreter.IsEnabled = actif;
     }
 
     // ------------------------------------------------------------------
@@ -129,7 +133,7 @@ public partial class FenetrePrincipale : Window
 
         try
         {
-            EnregistrerEtAppliquer();
+            EnregistrerConfiguration();
         }
         finally
         {
@@ -137,7 +141,7 @@ public partial class FenetrePrincipale : Window
         }
     }
 
-    private void EnregistrerEtAppliquer()
+    private void EnregistrerConfiguration()
     {
         if (!LireIntervalle(out int minutes, out string erreur))
         {
@@ -180,13 +184,9 @@ public partial class FenetrePrincipale : Window
 
         List<string> etapes = new() { "Configuration enregistrée." };
 
-        ResultatTache creationService = TachesPlanifiees.CreerService();
-        etapes.Add(creationService.Message);
-
-        if (!creationService.Ok)
+        if (!TachesPlanifiees.Existe(TachesPlanifiees.NomService))
         {
-            AfficherStatut(string.Join(Environment.NewLine, etapes), erreur: true);
-            return;
+            etapes.Add(TachesPlanifiees.CreerService().Message);
         }
 
         bool avecWindows = CaseDemarrerAvecWindows.IsChecked == true;
@@ -195,29 +195,65 @@ public partial class FenetrePrincipale : Window
         {
             etapes.Add(TachesPlanifiees.CreerTray().Message);
         }
-        else
+        else if (TachesPlanifiees.Existe(TachesPlanifiees.NomTray))
         {
-            TachesPlanifiees.Supprimer(TachesPlanifiees.NomTray);
-            etapes.Add("Démarrage automatique de l'icône désactivé.");
-        }
-        // Redémarrage de l'agent : il relit settings.json et recalcule son échéance.
-        // L'arrêt est propre, donc la tâche planifiée ne le relance pas en double.
-        etapes.Add(TachesPlanifiees.RedemarrerService().Message);
-
-        if (avecWindows)
-        {
-            // IgnoreNew : si l'icône tourne déjà, rien ne se passe. L'échec
-            // éventuel n'est donc pas une erreur à signaler.
-            if (TachesPlanifiees.Demarrer(TachesPlanifiees.NomTray).Ok)
-            {
-                etapes.Add("Icône lancée.");
-            }
+            etapes.Add(TachesPlanifiees.Supprimer(TachesPlanifiees.NomTray).Message);
         }
 
+        etapes.Add(ServiceEnCours()
+            ? "Le service tourne : il relira la configuration dans les secondes qui viennent."
+            : "Le service n'est pas lancé : utilise le bouton « Démarrer le service ».");
         AfficherStatut(string.Join(Environment.NewLine, etapes));
         RafraichirEtat();
     }
 
+    /// <summary>Lance l'agent, et l'icône si le démarrage automatique est actif.</summary>
+    private void SurDemarrerService(object sender, RoutedEventArgs e)
+    {
+        Mouse.OverrideCursor = Cursors.Wait;
+
+        try
+        {
+            ResultatTache resultat = TachesPlanifiees.Demarrer(TachesPlanifiees.NomService);
+
+            if (!resultat.Ok)
+            {
+                AfficherStatut(resultat.Message, erreur: true);
+                return;
+            }
+
+            if (CaseDemarrerAvecWindows.IsChecked == true)
+            {
+                TachesPlanifiees.Demarrer(TachesPlanifiees.NomTray);
+            }
+
+            AfficherStatut("Service démarré.");
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+
+        RafraichirEtat();
+    }
+
+    /// <summary>Arrête l'agent proprement, sans relance automatique.</summary>
+    private void SurArreterService(object sender, RoutedEventArgs e)
+    {
+        Mouse.OverrideCursor = Cursors.Wait;
+
+        try
+        {
+            ResultatTache resultat = TachesPlanifiees.ArreterService();
+            AfficherStatut(resultat.Message, erreur: !resultat.Ok);
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+
+        RafraichirEtat();
+    }
     private void SurMiseAJourImmediatee(object sender, RoutedEventArgs e)
     {
         try

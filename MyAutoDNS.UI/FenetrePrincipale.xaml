@@ -36,10 +36,16 @@
             <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.5" Color="Black" />
         </Border.Effect>
 
-        <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <!-- ================= En-tete ================= -->
-            <Border Background="{StaticResource Surface}"
+            <Border Grid.Row="0"
+                    Background="{StaticResource Surface}"
                     BorderBrush="{StaticResource Bordure}"
                     BorderThickness="0,0,0,1"
                     CornerRadius="12,12,0,0"
@@ -72,7 +78,7 @@
             </Border>
 
             <!-- ================= Contenu ================= -->
-            <StackPanel Margin="20,18,20,20">
+            <StackPanel Grid.Row="1" Margin="20,18,20,18">
 
                 <!-- Adresse -->
                 <TextBlock Text="Adresse de mise à jour" Style="{StaticResource Libelle}" />
@@ -169,43 +175,75 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Actions -->
-                <WrapPanel>
-                    <Button x:Name="BoutonEnregistrer"
-                            Content="Enregistrer et appliquer"
-                            Style="{StaticResource BoutonAccent}"
-                            Margin="0,0,8,8"
-                            Click="SurEnregistrer" />
-                    <Button x:Name="BoutonMiseAJour"
-                            Content="Mettre à jour maintenant"
-                            Style="{StaticResource BoutonSecondaire}"
-                            Margin="0,0,8,8"
-                            Click="SurMiseAJourImmediatee" />
-                    <Button x:Name="BoutonJournal"
-                            Content="Ouvrir le journal"
-                            Style="{StaticResource BoutonSecondaire}"
-                            Margin="0,0,8,8"
-                            Click="SurOuvrirJournal" />
-                    <Button x:Name="BoutonNotifications"
-                            Content="Notifications…"
-                            Style="{StaticResource BoutonSecondaire}"
-                            Margin="0,0,8,8"
-                            Click="SurOuvrirNotifications" />
-                    <Button Content="Fermer"
-                            Style="{StaticResource BoutonSecondaire}"
-                            Margin="0,0,0,8"
-                            IsCancel="True"
-                            Click="SurFermer" />
-                </WrapPanel>
-
                 <!-- Message -->
                 <TextBlock x:Name="TexteStatut"
-                           Margin="0,8,0,0"
+                           Margin="0,4,0,0"
                            TextWrapping="Wrap"
                            LineHeight="17"
                            FontSize="12" />
 
             </StackPanel>
-        </StackPanel>
+
+            <!-- ================= Barre d'actions ================= -->
+            <Border Grid.Row="2"
+                    Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Bordure}"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,12,12"
+                    Padding="20,14,20,6">
+
+                <StackPanel>
+
+                    <!-- Configuration et controle du service -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button x:Name="BoutonEnregistrer"
+                                Content="Enregistrer"
+                                Style="{StaticResource BoutonAccent}"
+                                Margin="0,0,24,0"
+                                ToolTip="Écrit la configuration et met les tâches planifiées à jour, sans toucher au service en cours."
+                                Click="SurEnregistrer" />
+
+                        <Button x:Name="BoutonDemarrer"
+                                Content="Démarrer le service"
+                                Style="{StaticResource BoutonSucces}"
+                                Margin="0,0,8,0"
+                                Click="SurDemarrerService" />
+
+                        <Button x:Name="BoutonArreter"
+                                Content="Arrêter le service"
+                                Style="{StaticResource BoutonDanger}"
+                                Click="SurArreterService" />
+                    </StackPanel>
+
+                    <!-- Actions ponctuelles, fermeture a droite -->
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right"
+                                Content="Fermer"
+                                Style="{StaticResource BoutonFantome}"
+                                IsCancel="True"
+                                Click="SurFermer" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BoutonMiseAJour"
+                                    Content="Mettre à jour maintenant"
+                                    Style="{StaticResource BoutonSecondaire}"
+                                    Margin="0,0,8,0"
+                                    Click="SurMiseAJourImmediatee" />
+                            <Button x:Name="BoutonJournal"
+                                    Content="Journal"
+                                    Style="{StaticResource BoutonSecondaire}"
+                                    Margin="0,0,8,0"
+                                    Click="SurOuvrirJournal" />
+                            <Button x:Name="BoutonNotifications"
+                                    Content="Notifications…"
+                                    Style="{StaticResource BoutonSecondaire}"
+                                    Click="SurOuvrirNotifications" />
+                        </StackPanel>
+                    </DockPanel>
+
+                </StackPanel>
+            </Border>
+
+        </Grid>
     </Border>
 </Window>
