@@ -107,7 +107,7 @@ public partial class FenetreEmail : Window
             : "Réglages enregistrés. Les notifications sont désactivées.");
     }
 
-    private async void SurTester(object sender, RoutedEventArgs e)
+    private void SurTester(object sender, RoutedEventArgs e)
     {
         if (!Construire(out ConfigurationEmail reglages, out string erreur))
         {
@@ -115,29 +115,10 @@ public partial class FenetreEmail : Window
             return;
         }
 
-        Mouse.OverrideCursor = Cursors.Wait;
-        Afficher("Envoi du message de test…");
-
-        try
-        {
-            ResultatNotification resultat = await NotificationEmail.EnvoyerAsync(
-                reglages,
-                "MyAutoDNS — test de configuration",
-                "Ceci est un message de test envoyé par MyAutoDNS."
-                + Environment.NewLine + Environment.NewLine
-                + $"Machine : {Environment.MachineName}" + Environment.NewLine
-                + "Si tu lis ce message, les réglages SMTP sont corrects.");
-
-            Afficher(resultat.Message, erreur: !resultat.Envoye);
-        }
-        catch (Exception ex)
-        {
-            Afficher($"Test impossible : {ex.Message}", erreur: true);
-        }
-        finally
-        {
-            Mouse.OverrideCursor = null;
-        }
+        // Le test s'ouvre dans sa propre fenêtre : chaque étape y est horodatée, et
+        // tout est recopié dans logs\smtp_test.log pour rester consultable ensuite.
+        FenetreTestEmail fenetre = new(reglages) { Owner = this };
+        fenetre.ShowDialog();
     }
 
     private void SurFermer(object sender, RoutedEventArgs e) => Close();

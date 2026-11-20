@@ -135,6 +135,40 @@
         </Style>
 
         <!-- ============================================================
+             Zone de journal (texte brut, monospace)
+
+             Le style TextBox general centre verticalement son contenu :
+             convenable pour une ligne de saisie, pas pour un journal
+             multiligne. D'ou ce modele dedie.
+             ============================================================ -->
+        <Style x:Key="ZoneLog" TargetType="TextBox">
+            <Setter Property="Background" Value="#FF141414" />
+            <Setter Property="Foreground" Value="{StaticResource Texte}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Bordure}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============================================================
              Case a cocher
              ============================================================ -->
         <Style TargetType="CheckBox">

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using System.Net.Sockets;
 using System.Text;
 
 namespace MyAutoDNS.Core;
@@ -69,7 +70,7 @@ public static class NotificationEmail
         }
         catch (Exception ex)
         {
-            return new ResultatNotification(false, $"Envoi de la notification impossible : {ex.Message}");
+            return new ResultatNotification(false, $"Envoi de la notification impossible : {DecrireException(ex)}");
         }
     }
 
@@ -96,5 +97,54 @@ public static class NotificationEmail
         corps.AppendLine("Message envoyé automatiquement par MyAutoDNS.");
 
         return corps.ToString();
+    }
+
+    /// <summary>
+    /// Vérifie que le port du serveur SMTP répond, sans rien envoyer.
+    ///
+    /// C'est l'étape la plus utile au diagnostic : elle distingue « serveur
+    /// injoignable ou port filtré » de « serveur joignable mais identifiants
+    /// refusés », deux causes qui n'ont pas le même remède.
+    /// </summary>
+    /// <exception cref="TimeoutException">Aucune réponse dans le délai imparti.</exception>
+    /// <exception cref="SocketException">Connexion refusée, ou hôte inconnu.</exception>
+    public static async Task TesterPortAsync(
+        string hote,
+        int port,
+        TimeSpan delai,
+        CancellationToken jeton = default)
+    {
+        using TcpClient client = new();
+        using CancellationTokenSource limite = CancellationTokenSource.CreateLinkedTokenSource(jeton);
+
+        limite.CancelAfter(delai);
+
+        try
+        {
+            await client.ConnectAsync(hote, port, limite.Token);
+        }
+        catch (OperationCanceledException) when (!jeton.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"aucune réponse en {delai.TotalSeconds:F0} s. Le port {port} est filtré, "
+                + "ou le nom du serveur est incorrect.");
+        }
+    }
+
+    /// <summary>
+    /// Décrit une exception avec ses causes imbriquées : un échec SMTP cache
+    /// presque toujours la vraie raison dans l'exception interne (nom d'hôte
+    /// introuvable, certificat refusé, connexion rejetée).
+    /// </summary>
+    public static string DecrireException(Exception exception)
+    {
+        StringBuilder texte = new(exception.Message);
+
+        for (Exception? interne = exception.InnerException; interne is not null; interne = interne.InnerException)
+        {
+            texte.Append(" → ").Append(interne.Message);
+        }
+
+        return texte.ToString();
     }
 }
