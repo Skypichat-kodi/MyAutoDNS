@@ -235,7 +235,8 @@ public partial class FenetrePrincipale : Window
                 Thread.Sleep(200);
             }
 
-            AfficherStatut("Service démarré.", succes: true);
+            // L'état du service est déjà affiché juste au-dessus : inutile de le répéter.
+            AfficherStatut(string.Empty);
         }
         finally
         {
@@ -253,7 +254,9 @@ public partial class FenetrePrincipale : Window
         try
         {
             ResultatTache resultat = TachesPlanifiees.ArreterService();
-            AfficherStatut(resultat.Message, erreur: !resultat.Ok, succes: resultat.Ok);
+
+            // Même logique que pour le démarrage : le bloc d'état fait foi.
+            AfficherStatut(resultat.Ok ? string.Empty : resultat.Message, erreur: !resultat.Ok);
         }
         finally
         {
