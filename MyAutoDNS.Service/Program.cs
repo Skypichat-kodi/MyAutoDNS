@@ -74,6 +74,11 @@ internal static class Program
         DateTimeOffset echeance = CalculerEcheance(configuration, etat);
         string? dernierAvertissement = null;
 
+        // Le journal vient d'être recréé : sans ces lignes, un simple redémarrage
+        // effacerait toute trace de la synchronisation précédente, et l'utilisateur
+        // n'aurait plus aucun moyen de savoir où en était la mise à jour.
+        TracerEtatEtEcheance(etat, echeance, rappelerDerniereRequete: true);
+
         // Date d'écriture de la dernière demande immédiate traitée. Elle empêche
         // de rejouer la même demande si le fichier n'a pas pu être supprimé.
         DateTime? demandeTraitee = null;
@@ -112,6 +117,9 @@ internal static class Program
 
                     echeance = CalculerEcheance(configuration, etat);
                     dernierAvertissement = null;
+
+                    // La configuration a changé : l'échéance aussi.
+                    TracerEtatEtEcheance(etat, echeance, rappelerDerniereRequete: false);
                 }
 
                 // ---- 2. Demande de mise à jour immédiate ? ----
@@ -151,6 +159,44 @@ internal static class Program
         Journal.Ecrire("Service arrêté.");
         Console.WriteLine("MyAutoDNS Service arrêté.");
         return 0;
+    }
+
+    /// <summary>
+    /// Journalise la prochaine échéance, et éventuellement la dernière
+    /// synchronisation connue.
+    ///
+    /// Le journal étant recréé à chaque démarrage, ces lignes sont la seule
+    /// mémoire de ce qui s'est passé avant : sans elles, un redémarrage du
+    /// service effacerait le résultat de la dernière requête, notamment le cas
+    /// « adresse déjà à jour » où rien ne change et où rien ne se remarque.
+    /// </summary>
+    private static void TracerEtatEtEcheance(
+        EtatAgent etat,
+        DateTimeOffset echeance,
+        bool rappelerDerniereRequete)
+    {
+        if (rappelerDerniereRequete)
+        {
+            if (etat.DerniereRequeteUtc is null)
+            {
+                Journal.Ecrire("Aucune requête enregistrée pour l'instant.");
+            }
+            else
+            {
+                DateTime quand = etat.DerniereRequeteUtc.Value.LocalDateTime;
+
+                string detail = string.IsNullOrWhiteSpace(etat.DerniereReponse)
+                    ? string.Empty
+                    : $" : {etat.DerniereReponse}";
+
+                Journal.Ecrire(
+                    $"Dernière requête le {quand:dd/MM/yyyy} à {quand:HH:mm:ss} — "
+                    + $"{etat.DernierEtat.Libelle()}{detail}");
+            }
+        }
+
+        DateTime prochaine = echeance.LocalDateTime;
+        Journal.Ecrire($"Prochaine mise à jour prévue le {prochaine:dd/MM/yyyy} à {prochaine:HH:mm:ss}.");
     }
 
     /// <summary>
