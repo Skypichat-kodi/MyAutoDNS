@@ -11,10 +11,8 @@ namespace MyAutoDNS.UI;
 ///
 /// Elle montre chaque étape horodatée et recopie tout dans
 /// `logs\smtp_test.log`, afin qu'une erreur reste consultable après la fermeture.
-///
-/// Une différence avec MCEMonitor : son test s'appuie sur MailKit, qui expose
-/// connexion, authentification et envoi séparément. System.Net.Mail les regroupe
-/// dans un seul appel, d'où une étape unique après le test de port.
+/// MailKit exposant la connexion, l'authentification et l'envoi séparément, le
+/// déroulement est aussi détaillé que dans MCEMonitor.
 /// </summary>
 public partial class FenetreTestEmail : Window
 {
@@ -45,7 +43,7 @@ public partial class FenetreTestEmail : Window
 
         Journaliser("=== Nouveau test SMTP ===");
         Journaliser($"Paramètres : serveur={_reglages.Serveur}, port={_reglages.Port}, "
-                    + $"chiffrement={(_reglages.ConnexionChiffree ? "STARTTLS" : "aucun")}");
+                    + $"sécurité={_reglages.Securite.Libelle()}");
         Journaliser($"Expéditeur : {_reglages.Expediteur}");
         Journaliser($"Destinataire : {_reglages.Destinataire}");
         Journaliser(string.Empty);
@@ -53,18 +51,6 @@ public partial class FenetreTestEmail : Window
         if (!await TesterLePortAsync())
         {
             Terminer();
-            return;
-        }
-
-        // System.Net.Mail ne sait faire que STARTTLS : sur le port 465, le serveur
-        // attend une poignee de main TLS immediate alors que le client attend
-        // d'abord la banniere en clair. Les deux se bloquent jusqu'au delai.
-        if (_reglages.Port == 465)
-        {
-            Journaliser("ARRÊT : le port 465 utilise le SSL implicite, que System.Net.Mail ne sait pas négocier.");
-            Journaliser("Utilise le port 587 (STARTTLS) : le serveur Orange accepte les deux.");
-            Journaliser(string.Empty);
-            Journaliser("Rien n'a été envoyé. La tentative aurait échoué après une attente de 30 secondes.");
             return;
         }
 
@@ -99,10 +85,12 @@ public partial class FenetreTestEmail : Window
 
     private async Task EnvoyerLeMessageAsync()
     {
-        Journaliser("Connexion, authentification et envoi…");
-        Journaliser("(System.Net.Mail ne permet pas de détailler ces trois étapes)");
         Journaliser("Le serveur a jusqu'à 30 secondes pour répondre.");
         Journaliser(string.Empty);
+
+        // Progress<T> ramène les rapports sur le thread de l'interface : MailKit
+        // les émet depuis un thread de fond.
+        Progress<string> progression = new(Journaliser);
 
         ResultatNotification resultat = await NotificationEmail.EnvoyerAsync(
             _reglages,
@@ -110,8 +98,10 @@ public partial class FenetreTestEmail : Window
             "Ceci est un message de test envoyé par MyAutoDNS."
             + Environment.NewLine + Environment.NewLine
             + $"Machine : {Environment.MachineName}" + Environment.NewLine
-            + "Si tu lis ce message, les réglages SMTP sont corrects.");
+            + "Si tu lis ce message, les réglages SMTP sont corrects.",
+            progression: progression);
 
+        Journaliser(string.Empty);
         Journaliser(resultat.Message);
         Journaliser(string.Empty);
 

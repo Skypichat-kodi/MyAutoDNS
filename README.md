@@ -73,15 +73,17 @@ Reglages dans `C:\ProgramData\MyAutoDNS\email.json`, saisis depuis le bouton
 | `Destinataire` | adresse qui recoit l'alerte | vide |
 | `Serveur` | nom d'hote du serveur SMTP | vide |
 | `Port` | port du serveur | `587` |
-| `ConnexionChiffree` | negocier STARTTLS | `true` |
+| `Securite` | `Ssl` (465), `StartTls` (587) ou `Aucun` (25) | `StartTls` |
 | `MotDePasseChiffre` | mot de passe chiffre DPAPI, jamais en clair | vide |
 
 Le mot de passe est chiffre avec DPAPI en portee **machine** : le service (SYSTEM)
 et l'interface (administrateur) doivent tous deux pouvoir le relire, or ce sont
 deux comptes distincts. Un fichier recopie sur un autre poste devient inutilisable.
 
-`System.Net.Mail` ne gere que STARTTLS : le port 465 (SSL implicite) n'est pas
-pris en charge, il faut utiliser 587, ou 25 pour un serveur local sans chiffrement.
+L'envoi s'appuie sur **MailKit** (la meme bibliotheque que MCEMonitor).
+`System.Net.Mail` a ete abandonne apres deux echecs constates : il n'envoie
+l'authentification que si le serveur l'annonce dans sa banniere EHLO (refus
+`OFR_402` d'Orange), et il ne sait pas negocier le SSL implicite du port 465.
 
 ## Journal
 

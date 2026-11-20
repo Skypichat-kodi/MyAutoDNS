@@ -19,10 +19,15 @@
 
   <ItemGroup>
     <!--
-      Chiffrement DPAPI du mot de passe SMTP. Ce n'est pas dans le framework
-      partage : le package officiel Microsoft est necessaire. Il ne sert que sur
-      Windows, ce qui est le cas de cette application.
+      MailKit : envoi SMTP. Remplace System.Net.Mail, qui n'envoie pas
+      l'authentification si le serveur ne l'annonce pas dans sa banniere EHLO
+      (refus OFR_402 d'Orange), et qui ne sait pas negocier le SSL implicite
+      du port 465.
+
+      System.Security.Cryptography.ProtectedData : chiffrement DPAPI du mot de
+      passe. Ce n'est pas dans le framework partage.
     -->
+    <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 

@@ -47,8 +47,13 @@ public sealed class ConfigurationEmail
     /// <summary>Port du serveur. 587 = STARTTLS, 25 = non chiffré.</summary>
     public int Port { get; set; } = 587;
 
-    /// <summary>Négocier STARTTLS. À laisser coché sauf serveur local sans chiffrement.</summary>
-    public bool ConnexionChiffree { get; set; } = true;
+    /// <summary>
+    /// Mode de chiffrement de la connexion :
+    /// Ssl = TLS immédiat (port 465), StartTls = TLS après négociation (port 587),
+    /// Aucun = trafic en clair (port 25, serveur local uniquement).
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ModeSecurite Securite { get; set; } = ModeSecurite.StartTls;
 
     /// <summary>Mot de passe chiffré, tel qu'il est écrit dans le fichier. Jamais affiché.</summary>
     public string MotDePasseChiffre { get; set; } = string.Empty;
@@ -162,6 +167,29 @@ public sealed class ConfigurationEmail
             && adresse.LastIndexOf('@') < adresse.Length - 1
             && !adresse.Contains(' ', StringComparison.Ordinal);
     }
+}
+
+/// <summary>Mode de chiffrement retenu pour la connexion au serveur SMTP.</summary>
+public enum ModeSecurite
+{
+    /// <summary>TLS immédiat à la connexion. Port 465.</summary>
+    Ssl = 0,
+
+    /// <summary>TLS négocié après la bannière du serveur. Port 587.</summary>
+    StartTls = 1,
+
+    /// <summary>Trafic en clair. Port 25, réservé à un serveur local.</summary>
+    Aucun = 2,
+}
+
+public static class ModeSecuriteExtensions
+{
+    public static string Libelle(this ModeSecurite mode) => mode switch
+    {
+        ModeSecurite.Ssl => "SSL (port 465)",
+        ModeSecurite.Aucun => "Aucun chiffrement (port 25)",
+        _ => "STARTTLS (port 587)",
+    };
 }
 
 /// <summary>

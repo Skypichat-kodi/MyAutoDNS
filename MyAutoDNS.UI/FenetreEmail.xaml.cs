@@ -33,7 +33,15 @@ public partial class FenetreEmail : Window
         ChampDestinataire.Text = configuration.Destinataire;
         ChampServeur.Text = configuration.Serveur;
         ChampPort.Text = configuration.Port.ToString(CultureInfo.CurrentCulture);
-        CaseChiffree.IsChecked = configuration.ConnexionChiffree;
+
+        // Après le port : la saisie du port peut avoir ajusté le mode tout seul,
+        // la valeur enregistrée doit l'emporter.
+        ChoixSecurite.SelectedIndex = configuration.Securite switch
+        {
+            ModeSecurite.Ssl => 0,
+            ModeSecurite.Aucun => 2,
+            _ => 1,
+        };
 
         if (configuration.MotDePasseIllisible)
         {
@@ -55,7 +63,12 @@ public partial class FenetreEmail : Window
             Destinataire = ChampDestinataire.Text.Trim(),
             Serveur = ChampServeur.Text.Trim(),
             MotDePasse = ChampMotDePasse.Password,
-            ConnexionChiffree = CaseChiffree.IsChecked == true,
+            Securite = ChoixSecurite.SelectedIndex switch
+            {
+                0 => ModeSecurite.Ssl,
+                2 => ModeSecurite.Aucun,
+                _ => ModeSecurite.StartTls,
+            },
         };
 
         erreur = string.Empty;
@@ -125,29 +138,32 @@ public partial class FenetreEmail : Window
     private void SurFermer(object sender, RoutedEventArgs e) => Close();
 
     /// <summary>
-    /// Prévient dès la saisie si le port choisi ne pourra pas fonctionner :
-    /// 465 désigne le SSL implicite, que System.Net.Mail ne sait pas négocier.
+    /// Le port et le mode de sécurité vont de pair : 465 impose le SSL immédiat,
+    /// 587 le STARTTLS, 25 le trafic en clair. On aligne le mode automatiquement,
+    /// l'utilisateur reste libre de le changer ensuite.
     /// </summary>
     private void SurPortModifie(object sender, TextChangedEventArgs e)
     {
-        if (TexteStatut is null)
+        if (ChoixSecurite is null)
         {
             return;
         }
 
-        if (int.TryParse(ChampPort.Text.Trim(), CultureInfo.CurrentCulture, out int port) && port == 465)
+        if (!int.TryParse(ChampPort.Text.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out int port))
         {
-            Afficher(
-                "Le port 465 (SSL implicite) n'est pas pris en charge : la connexion resterait bloquée "
-                + "une trentaine de secondes. Utilise le port 587.",
-                erreur: true);
-
             return;
         }
 
-        if (TexteStatut.Text.StartsWith("Le port 465", StringComparison.Ordinal))
+        int attendu = port switch
         {
-            Afficher(string.Empty);
+            465 => 0,
+            25 => 2,
+            _ => 1,
+        };
+
+        if (port is 465 or 587 or 25 && ChoixSecurite.SelectedIndex != attendu)
+        {
+            ChoixSecurite.SelectedIndex = attendu;
         }
     }
 

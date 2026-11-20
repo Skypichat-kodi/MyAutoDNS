@@ -1,7 +1,8 @@
-using System.Net;
-using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace MyAutoDNS.Core;
 
@@ -12,10 +13,14 @@ public sealed record ResultatNotification(bool Envoye, string Message);
 /// Envoi du courriel d'alerte, une fois la nouvelle adresse enregistrée chez le
 /// fournisseur DDNS.
 ///
-/// Le principe reprend celui de MCEMonitor, avec System.Net.Mail plutôt que
-/// MailKit. Conséquence à connaître : cette bibliothèque ne sait faire que
-/// STARTTLS. Un serveur qui n'accepte que le SSL implicite (port 465) ne
-/// fonctionnera pas ici ; il faut utiliser 587 ou 25.
+/// S'appuie sur MailKit, comme l'onglet Email de MCEMonitor. System.Net.Mail a été
+/// abandonné pour deux raisons constatées sur ce poste :
+///  - il n'envoie l'authentification que si le serveur l'annonce dans sa bannière
+///    EHLO, d'où le refus « Authentification requise » (OFR_402) d'Orange ;
+///  - il ne sait pas négocier le SSL implicite du port 465.
+///
+/// MailKit expose en outre la connexion, l'authentification et l'envoi séparément,
+/// ce qui permet à la fenêtre de test d'afficher le déroulement étape par étape.
 /// </summary>
 public static class NotificationEmail
 {
@@ -26,11 +31,16 @@ public static class NotificationEmail
     /// Envoie le courriel. Ne lève jamais : toute erreur est renvoyée sous forme
     /// de résultat, pour être journalisée sans interrompre la synchronisation.
     /// </summary>
+    /// <param name="progression">
+    /// Rapport d'avancement facultatif, utilisé par la fenêtre de test pour
+    /// afficher chaque étape. Le service n'en passe pas.
+    /// </param>
     public static async Task<ResultatNotification> EnvoyerAsync(
         ConfigurationEmail configuration,
         string sujet,
         string corps,
-        CancellationToken jeton = default)
+        CancellationToken jeton = default,
+        IProgress<string>? progression = null)
     {
         string? invalide = configuration.Valider();
 
@@ -41,32 +51,64 @@ public static class NotificationEmail
 
         try
         {
-            using MailMessage message = new()
-            {
-                From = new MailAddress(
-                    configuration.Expediteur,
-                    $"MyAutoDNS — {Environment.MachineName}"),
-                Subject = sujet,
-                SubjectEncoding = Encoding.UTF8,
-                Body = corps,
-                BodyEncoding = Encoding.UTF8,
-                IsBodyHtml = false,
-            };
+            MimeMessage message = new();
 
-            message.To.Add(configuration.Destinataire);
+            message.From.Add(new MailboxAddress(
+                $"MyAutoDNS — {Environment.MachineName}",
+                configuration.Expediteur));
 
-            using SmtpClient client = new(configuration.Serveur, configuration.Port)
+            message.To.Add(MailboxAddress.Parse(configuration.Destinataire));
+            message.Subject = sujet;
+            message.Body = new TextPart("plain") { Text = corps };
+
+            using SmtpClient client = new()
             {
-                EnableSsl = configuration.ConnexionChiffree,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(configuration.Expediteur, configuration.MotDePasse),
                 Timeout = DelaiEnvoi,
             };
 
-            await client.SendMailAsync(message, jeton);
+            progression?.Report(
+                $"Connexion à {configuration.Serveur}:{configuration.Port} — {configuration.Securite.Libelle()}…");
+
+            await client.ConnectAsync(
+                configuration.Serveur,
+                configuration.Port,
+                Convertir(configuration.Securite),
+                jeton);
+
+            progression?.Report($"Connexion établie ({client.SslProtocol}).");
+
+            progression?.Report($"Authentification de {configuration.Expediteur}…");
+            await client.AuthenticateAsync(configuration.Expediteur, configuration.MotDePasse, jeton);
+            progression?.Report("Authentification acceptée.");
+
+            progression?.Report("Envoi du message…");
+            await client.SendAsync(message, jeton);
+            progression?.Report("Message remis au serveur.");
+
+            await client.DisconnectAsync(true, jeton);
+            progression?.Report("Déconnexion.");
 
             return new ResultatNotification(true, $"Notification envoyée à {configuration.Destinataire}.");
+        }
+        catch (AuthenticationException ex)
+        {
+            return new ResultatNotification(
+                false,
+                "Authentification refusée par le serveur. Vérifie l'adresse d'expédition "
+                + $"et le mot de passe : {DecrireException(ex)}");
+        }
+        catch (SslHandshakeException ex)
+        {
+            return new ResultatNotification(
+                false,
+                "La négociation chiffrée a échoué. Essaie un autre mode de sécurité "
+                + $"(SSL pour 465, STARTTLS pour 587) : {DecrireException(ex)}");
+        }
+        catch (SmtpCommandException ex)
+        {
+            return new ResultatNotification(
+                false,
+                $"Le serveur a refusé la commande ({ex.StatusCode}) : {DecrireException(ex)}");
         }
         catch (Exception ex)
         {
@@ -74,30 +116,12 @@ public static class NotificationEmail
         }
     }
 
-    /// <summary>Sujet du courriel, avec le nom de la machine d'origine.</summary>
-    public static string ConstruireSujet() =>
-        $"MyAutoDNS — adresse mise à jour sur {Environment.MachineName}";
-
-    /// <summary>Corps du courriel : la réponse du fournisseur, brute, et le contexte.</summary>
-    public static string ConstruireCorps(string reponse, string cheminJournal, DateTime quand)
+    private static SecureSocketOptions Convertir(ModeSecurite mode) => mode switch
     {
-        StringBuilder corps = new();
-
-        corps.AppendLine($"Le nom de domaine a été mis à jour le {quand:dd/MM/yyyy} à {quand:HH:mm:ss}.");
-        corps.AppendLine();
-        corps.AppendLine($"Machine  : {Environment.MachineName}");
-        corps.AppendLine($"Réponse  : {reponse}");
-
-        if (!string.IsNullOrWhiteSpace(cheminJournal))
-        {
-            corps.AppendLine($"Journal  : {cheminJournal}");
-        }
-
-        corps.AppendLine();
-        corps.AppendLine("Message envoyé automatiquement par MyAutoDNS.");
-
-        return corps.ToString();
-    }
+        ModeSecurite.Ssl => SecureSocketOptions.SslOnConnect,
+        ModeSecurite.Aucun => SecureSocketOptions.None,
+        _ => SecureSocketOptions.StartTls,
+    };
 
     /// <summary>
     /// Vérifie que le port du serveur SMTP répond, sans rien envoyer.
@@ -129,6 +153,31 @@ public static class NotificationEmail
                 $"aucune réponse en {delai.TotalSeconds:F0} s. Le port {port} est filtré, "
                 + "ou le nom du serveur est incorrect.");
         }
+    }
+
+    /// <summary>Sujet du courriel, avec le nom de la machine d'origine.</summary>
+    public static string ConstruireSujet() =>
+        $"MyAutoDNS — adresse mise à jour sur {Environment.MachineName}";
+
+    /// <summary>Corps du courriel : la réponse du fournisseur, brute, et le contexte.</summary>
+    public static string ConstruireCorps(string reponse, string cheminJournal, DateTime quand)
+    {
+        StringBuilder corps = new();
+
+        corps.AppendLine($"Le nom de domaine a été mis à jour le {quand:dd/MM/yyyy} à {quand:HH:mm:ss}.");
+        corps.AppendLine();
+        corps.AppendLine($"Machine  : {Environment.MachineName}");
+        corps.AppendLine($"Réponse  : {reponse}");
+
+        if (!string.IsNullOrWhiteSpace(cheminJournal))
+        {
+            corps.AppendLine($"Journal  : {cheminJournal}");
+        }
+
+        corps.AppendLine();
+        corps.AppendLine("Message envoyé automatiquement par MyAutoDNS.");
+
+        return corps.ToString();
     }
 
     /// <summary>

@@ -91,12 +91,20 @@
                     </StackPanel>
                 </Grid>
 
-                <CheckBox x:Name="CaseChiffree"
-                          Content="Connexion chiffrée (STARTTLS)"
-                          Margin="0,16,0,0" />
+                <TextBlock Text="Sécurité de la connexion"
+                           Style="{StaticResource Libelle}"
+                           Margin="0,16,0,5" />
+                <ComboBox x:Name="ChoixSecurite"
+                          Width="250"
+                          HorizontalAlignment="Left"
+                          SelectedIndex="1">
+                    <ComboBoxItem Content="SSL (port 465)" />
+                    <ComboBoxItem Content="STARTTLS (port 587)" />
+                    <ComboBoxItem Content="Aucun chiffrement (port 25)" />
+                </ComboBox>
                 <TextBlock Style="{StaticResource Aide}"
-                           Margin="24,6,0,0"
-                           Text="Port 587 recommandé. Le port 465 (SSL implicite) n'est pas pris en charge : ne décoche cette case que pour un serveur local sans chiffrement, sur le port 25." />
+                           Margin="0,6,0,0"
+                           Text="SSL correspond au port 465, STARTTLS au port 587 : le mode s'ajuste tout seul quand tu saisis le port. « Aucun » est réservé à un serveur local sans chiffrement." />
 
                 <WrapPanel Margin="0,18,0,0">
                     <Button Content="Enregistrer"
