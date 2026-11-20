@@ -63,6 +63,30 @@ public sealed class Configuration
     public static Configuration ParDefaut() => new();
 
     /// <summary>
+    /// Complète l'adresse par le slash final attendu par certains fournisseurs.
+    ///
+    /// afraid.org répond « Error 404 : Page not found » à une adresse de
+    /// synchronisation privée du slash final, alors même que le jeton est correct :
+    /// c'est une faute de saisie facile à commettre et difficile à diagnostiquer.
+    ///
+    /// Les adresses portant des paramètres de requête ne sont pas touchées : un
+    /// slash ajouté après le « ? » rendrait l'adresse invalide.
+    /// </summary>
+    public static string NormaliserUrl(string url)
+    {
+        string adresse = (url ?? string.Empty).Trim();
+
+        if (adresse.Length == 0
+            || adresse.Contains('?', StringComparison.Ordinal)
+            || adresse.Contains('#', StringComparison.Ordinal))
+        {
+            return adresse;
+        }
+
+        return adresse.EndsWith('/') ? adresse : adresse + "/";
+    }
+
+    /// <summary>
     /// Charge settings.json. Si le fichier est absent, renvoie la configuration par
     /// défaut (Url vide, donc invalide : le Service attendra une saisie).
     /// </summary>
@@ -77,7 +101,12 @@ public sealed class Configuration
         string json = File.ReadAllText(Chemins.FichierConfiguration, Encoding.UTF8);
         Configuration? configuration = JsonSerializer.Deserialize<Configuration>(json, OptionsLecture);
 
-        return configuration ?? ParDefaut();
+        // Une adresse éditée à la main dans le fichier bénéficie de la même
+        // correction qu'une adresse saisie dans l'interface.
+        Configuration resultat = configuration ?? ParDefaut();
+        resultat.Url = NormaliserUrl(resultat.Url);
+
+        return resultat;
     }
 
     /// <summary>Charge sans lever d'exception : renvoie la configuration par défaut en cas de problème.</summary>
@@ -99,6 +128,10 @@ public sealed class Configuration
     public void Enregistrer()
     {
         Chemins.PreparerDossiers();
+
+        // Le slash final manquant provoque un 404 chez afraid.org : on le complète
+        // avant d'écrire, quelle que soit l'origine de la saisie.
+        Url = NormaliserUrl(Url);
 
         string json = JsonSerializer.Serialize(this, OptionsEcriture);
 

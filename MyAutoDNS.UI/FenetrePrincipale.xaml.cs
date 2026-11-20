@@ -182,6 +182,10 @@ public partial class FenetrePrincipale : Window
             return;
         }
 
+        // Enregistrer a pu compléter l'adresse (slash final) : on l'affiche telle
+        // qu'elle a été retenue, pour que la correction soit visible.
+        ChampUrl.Text = configuration.Url;
+
         List<string> etapes = new() { "Configuration enregistrée." };
 
         if (!TachesPlanifiees.Existe(TachesPlanifiees.NomService))
