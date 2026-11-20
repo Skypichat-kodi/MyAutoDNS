@@ -203,7 +203,7 @@ public partial class FenetrePrincipale : Window
         etapes.Add(ServiceEnCours()
             ? "Le service tourne : il relira la configuration dans les secondes qui viennent."
             : "Le service n'est pas lancé : utilise le bouton « Démarrer le service ».");
-        AfficherStatut(string.Join(Environment.NewLine, etapes));
+        AfficherStatut(string.Join(Environment.NewLine, etapes), succes: true);
         RafraichirEtat();
     }
 
@@ -227,7 +227,15 @@ public partial class FenetrePrincipale : Window
                 TachesPlanifiees.Demarrer(TachesPlanifiees.NomTray);
             }
 
-            AfficherStatut("Service démarré.");
+            // Le processus met une à deux secondes à apparaître dans la liste.
+            // Sans cette attente, l'état relu juste après afficherait encore
+            // « arrêté » alors que le démarrage vient de réussir.
+            for (int essai = 0; essai < 12 && !ServiceEnCours(); essai++)
+            {
+                Thread.Sleep(200);
+            }
+
+            AfficherStatut("Service démarré.", succes: true);
         }
         finally
         {
@@ -245,7 +253,7 @@ public partial class FenetrePrincipale : Window
         try
         {
             ResultatTache resultat = TachesPlanifiees.ArreterService();
-            AfficherStatut(resultat.Message, erreur: !resultat.Ok);
+            AfficherStatut(resultat.Message, erreur: !resultat.Ok, succes: resultat.Ok);
         }
         finally
         {
@@ -468,9 +476,11 @@ public partial class FenetrePrincipale : Window
     /// <summary>Récupère une couleur de la palette définie dans App.xaml.</summary>
     private Brush Couleur(string cle) => (Brush)FindResource(cle);
 
-    private void AfficherStatut(string message, bool erreur = false)
+    private void AfficherStatut(string message, bool erreur = false, bool succes = false)
     {
         TexteStatut.Text = message;
-        TexteStatut.Foreground = erreur ? Couleur("Erreur") : Couleur("TexteSecondaire");
+        TexteStatut.Foreground = erreur
+            ? Couleur("Erreur")
+            : succes ? Couleur("Succes") : Couleur("TexteSecondaire");
     }
 }
