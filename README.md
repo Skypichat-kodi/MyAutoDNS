@@ -114,5 +114,6 @@ Runtime doit etre present sur le poste cible.
 - [x] Installation complete reelle et premiere synchronisation reussie
 - [x] Journal remis a zero au demarrage, UTF-8 avec BOM
 - [x] Qualification de la reponse du fournisseur DDNS
-- [ ] Validation de l'arret propre (code de retour 0 au lieu de 2147943691)
-- [ ] Validation du verrou d'instance de l'interface
+- [x] Arret propre valide : code de retour 0, aucune relance automatique
+- [x] Verrou d'instance de l'interface valide visuellement
+- [ ] Verification au prochain demarrage de Windows (reprise automatique)
