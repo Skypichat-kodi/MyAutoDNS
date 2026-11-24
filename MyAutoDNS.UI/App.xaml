@@ -78,7 +78,9 @@
             <Setter Property="Background" Value="{StaticResource Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Bordure}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="CaretBrush" Value="{StaticResource Accent}" />
             <Setter Property="SelectionBrush" Value="{StaticResource Accent}" />
             <Setter Property="Template">
@@ -111,7 +113,9 @@
             <Setter Property="Background" Value="{StaticResource Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Bordure}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="CaretBrush" Value="{StaticResource Accent}" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -220,7 +224,8 @@
             <Setter Property="Background" Value="{StaticResource Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Bordure}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="14,0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -486,7 +491,7 @@
         <Style TargetType="ComboBox">
             <Setter Property="Foreground" Value="{StaticResource Texte}" />
             <Setter Property="Padding" Value="10,6" />
-            <Setter Property="Height" Value="30" />
+            <Setter Property="Height" Value="32" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
